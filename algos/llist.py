@@ -4,6 +4,15 @@ class Node:
         self.val = val
         self.next = self.prev = None
 
+def llvalues(node):
+    out = []
+    curr = node
+    while curr:
+        out.append(curr.val)
+        curr = curr.next
+        if curr in (node, None): break
+    return out
+
 def llcircmake(*values):
     h1,t1 = llmake(*values)
     if h1 and t1:
@@ -17,6 +26,16 @@ def llmake(*values):
         node = Node(v)
         h1,t1 = llinsert(h1, t1, node, t1, doubly=True)
     return h1,t1
+
+def llcat(h1, t1, h2, t2, double=False):
+    if not h1:
+        return h2, t2
+    elif not h2:
+        return h1, t1
+    else:
+        t1.next = h2
+        h2.prev = t1
+        return h1, t2
 
 def listlen(node):
     """ Return the length of a linkedlist.  """
@@ -117,6 +136,28 @@ def llfind(head, findfunc):
             break
     return prev, curr
 
+def lldel(head, tail, node, prev=None, doubly=False):
+    if not head: return None, None
+
+    if node is head:
+        next = head.next
+        head.next = None
+        if next:
+            if doubly: next.prev = None
+            return next, tail
+        else:
+            return None, None
+
+    next = node.next
+    if doubly: prev = node.prev
+
+    assert prev, "Either must be a doubly linked list or a prev must be provided"
+    prev.next = next
+    if doubly and next: next.prev = prev
+
+    if node is tail: tail = prev
+    return head, tail
+
 def llinsert(head, tail, newnode, after=None, doubly=False):
     """
     Insert a newnode after a given 'after' node.  Our list is denoted by the head
@@ -127,13 +168,14 @@ def llinsert(head, tail, newnode, after=None, doubly=False):
     If the after node is null then the item is prepended to the list (and a
     new head will be returned).
 
-    NOTE - the node must *not* be in this list
+    NOTE - the node must *not* be in this list.  newnode's next and prev are first
+    clobbered to None so if newnode belongs to this list remove it first with lldel
     """
-    if not head:
-        return newnode, newnode
-
     newnode.next = None
     if doubly: newnode.prev = None
+
+    if not head:
+        return newnode, newnode
 
     if not after:
         # Prepend
@@ -142,92 +184,12 @@ def llinsert(head, tail, newnode, after=None, doubly=False):
         return newnode, tail
 
     # Save prev/next pointers
-    prev = after
-    next = after.next
+    newnode.next = after.next
+    if doubly and newnode.next: newnode.next.prev = newnode
 
-    newnode.next = next
-
-    if prev: prev.next = newnode
+    after.next = newnode
     if doubly:
-        newnode.prev = prev
-        if next: next.prev = newnode
+        newnode.prev = after
 
-    if after == tail:
-        tail = newnode
-
-    return head, tail
-
-import unittest
-class TestMethods(unittest.TestCase):
-    def test_listlen(self):
-        self.assertEqual(listlen(None), 0)
-
-        h,t = llmake() ; listlen(h)
-        self.assertEqual(listlen(h), 0)
-
-        h,t = llmake(1,2,3,4,5) ; listlen(h)
-        self.assertEqual(listlen(h), 5)
-
-    def test_listcmp(self):
-        h1,t1 = llmake(1,2,3,4,5)
-        h2,t2 = llmake(1,2,3,4,5)
-        self.assertEqual(listcmp(h1, h2), 0)
-
-        h1,t1 = llmake(1,2,3,4,5)
-        h2,t2 = llmake(1,2,3,4,5,6)
-        self.assertEqual(listcmp(h1, h2), -1)
-
-        h1,t1 = llmake(1,2,3,4,5)
-        h2,t2 = llmake(1,2,3,4)
-        self.assertEqual(listcmp(h1, h2), 1)
-
-        h1,t1 = llmake(1,2,3,4,5)
-        h2,t2 = llmake(1,2,3,4,7)
-        listcmp(h1, h2)
-        self.assertEqual(listcmp(h1, h2), -2)
-
-    def test_lltail(self):
-        h1,t1 = llmake(1,2,3,4,5)
-        self.assertEqual(lltail(h1).val, 5)
-
-    def test_llmin(self):
-        h1,t1 = llmake(10, 4, 9, 11, 1, 200)
-        self.assertEqual(llmin(h1).val, 1)
-    
-    def test_llmid(self):
-        h1,t1 = llmake(1)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev, mid.val), (None, 1))
-
-        h1,t1 = llmake(1, 2)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (1, 2))
-
-        h1,t1 = llmake(10, 4, 9, 11, 1, 200)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (9, 11))
-
-        h1,t1 = llmake(10, 4, 9, 11, 1, 200, 300)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (9, 11))
-
-    def test_llmid_circular(self):
-        h1,t1 = llcircmake(1)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev, mid.val), (None, 1))
-
-        h1,t1 = llcircmake(1, 2)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (1, 2))
-
-        h1,t1 = llcircmake(10, 4, 9, 11, 1, 200)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (9, 11))
-
-        h1,t1 = llcircmake(10, 4, 9, 11, 1, 200, 300)
-        prev,mid = llmid(h1)
-        self.assertEqual((prev.val, mid.val), (9, 11))
-
-if __name__ == '__main__':
-    # Run with python -m unittest *.py
-    unittest.main()
+    if after == tail: return head, newnode
+    else: return head, tail

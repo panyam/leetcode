@@ -1,4 +1,5 @@
 *.swp
+env
 *.swo
 __pycache__
 .coverage

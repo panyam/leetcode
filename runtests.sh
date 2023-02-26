@@ -1,2 +1,2 @@
-coverage run -m unittest algos/*.py
+coverage run -m unittest tests/*.py
 coverage report
