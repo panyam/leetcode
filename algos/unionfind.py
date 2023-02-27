@@ -1,5 +1,3 @@
-from ipdb import set_trace
-
 class SetUnion:
     def __init__(self, *items):
         self.items = set()

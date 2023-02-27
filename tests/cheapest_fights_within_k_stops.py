@@ -1,5 +1,4 @@
 
-from algos.heaps import Comparable
 from algos.djikstra import shortest_path 
 from typing import List
 import unittest

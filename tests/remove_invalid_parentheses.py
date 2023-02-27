@@ -11,10 +11,10 @@ class TestMethods(unittest.TestCase):
 def solution(s: str) -> List[str]:
     # Our BFS here needs a neighboring func that takes a string and returns
     # a list of strings with 1 "more" paranthesis removed
-    def neigh(s, data, parents):
+    def neigh(s, parents):
         for i in range(len(s)):
             if s[i] in ["(", ")"]:
-                yield s[:i] + s[i + 1:], None
+                yield s[:i] + s[i + 1:]
 
     def isvalid(s):
         count = 0
@@ -25,7 +25,7 @@ def solution(s: str) -> List[str]:
         return count == 0
 
     out = []
-    for node, level, data in bfs(neigh, s):
+    for node, level in bfs(neigh, s):
         if isvalid(node):
             if out and len(out[-1]) > len(node):
                 break

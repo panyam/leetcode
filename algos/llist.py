@@ -4,47 +4,6 @@ class Node:
         self.val = val
         self.next = self.prev = None
 
-def llvalues(node):
-    out = []
-    curr = node
-    while curr:
-        out.append(curr.val)
-        curr = curr.next
-        if curr in (node, None): break
-    return out
-
-def llcircmake(*values):
-    h1,t1 = llmake(*values)
-    if h1 and t1:
-        t1.next = h1
-        h1.prev = t1
-    return h1,t1
-
-def llmake(*values):
-    h1 = t1 = None
-    for v in values:
-        node = Node(v)
-        h1,t1 = llinsert(h1, t1, node, t1, doubly=True)
-    return h1,t1
-
-def llcat(h1, t1, h2, t2, double=False):
-    if not h1:
-        return h2, t2
-    elif not h2:
-        return h1, t1
-    else:
-        t1.next = h2
-        h2.prev = t1
-        return h1, t2
-
-def listlen(node):
-    """ Return the length of a linkedlist.  """
-    i = 0
-    while node:
-        node = node.next
-        i += 1
-    return i
-
 
 def listcmp(l1, l2, cmpfunc=None):
     """ Compares two lists and return -1, 0 or 1 depending on whether
@@ -193,3 +152,44 @@ def llinsert(head, tail, newnode, after=None, doubly=False):
 
     if after == tail: return head, newnode
     else: return head, tail
+
+def llvalues(node):
+    out = []
+    curr = node
+    while curr:
+        out.append(curr.val)
+        curr = curr.next
+        if curr in (node, None): break
+    return out
+
+def llcircmake(*values):
+    h1,t1 = llmake(*values)
+    if h1 and t1:
+        t1.next = h1
+        h1.prev = t1
+    return h1,t1
+
+def llmake(*values):
+    h1 = t1 = None
+    for v in values:
+        node = Node(v)
+        h1,t1 = llinsert(h1, t1, node, t1, doubly=True)
+    return h1,t1
+
+def llcat(h1, t1, h2, t2, double=False):
+    if not h1:
+        return h2, t2
+    elif not h2:
+        return h1, t1
+    else:
+        t1.next = h2
+        h2.prev = t1
+        return h1, t2
+
+def listlen(node):
+    """ Return the length of a linkedlist.  """
+    i = 0
+    while node:
+        node = node.next
+        i += 1
+    return i
