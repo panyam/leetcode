@@ -15,7 +15,7 @@ def solution_sp(n, flights, src, dst, k):
                 yield city, cost
 
     prices, parents = shortest_path(src, dst, neighbors)
-    print("Prices: ", prices, parents)
+    # print("Prices: ", prices, parents)
     return -1 if prices[dst] > 100000 else prices[dst]
 
 def solution(n, flights, src, dst, k):
@@ -30,48 +30,52 @@ def solution(n, flights, src, dst, k):
     # gen = bfs(neighbors, src)
 
     prices, parents = shortest_path(src, dst, neighbors)
-    print("Prices: ", prices, parents)
+    # print("Prices: ", prices, parents)
     return -1 if prices[dst] > 100000 else prices[dst]
 
 
 class TestMethods(unittest.TestCase):
-    def test_surrounded_regions(self):
+    def test_cases(self):
         # self.assertEqual(solve_surrounded_regions(grid),solution)
-        for case in cases[3:]:
-            self.assertEqual(solution(*case["input"]), case["output"])
+        for case,expected in cases:
+            self.assertEqual(solution(*case), expected)
 
 cases = [
-    {
-        "input": (
+    (
+        (
             4, [[0,1,100],[1,2,100],[2,0,100],[1,3,600],[2,3,200]],
             0, 3, 1
         ),
-        "output": 700,
-    },
-    {
-        "input": (
+        700
+    ),
+    (
+        (
             3,
             [[0,1,100],[1,2,100],[0,2,500]],
             0, 2, 1
         ),
-        "output": 200,
-    },
-    {
-        "input": (
+        200
+    ),
+    (
+        (
             3,
             [[0,1,100],[1,2,100],[0,2,500]],
             0, 2, 0,
         ),
-        "output": 500,
-    },
-    {
-        "input": (
+        500
+    ),
+]
+
+
+unused = [
+    (
+        (
             4,
             [[0,1,1],[0,2,5],[1,2,1],[2,3,1]],
             0, 3, 1
         ),
-        "output": 6,
-    }
+        6
+    )
 ]
 
 if __name__ == '__main__':

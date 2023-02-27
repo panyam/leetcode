@@ -27,14 +27,14 @@ def solution(board: List[List[str]]):
     R = len(board)
     C = len(board[0])
     nth = 2
-    def neigh(loc):
+    def neigh(loc, data, parents):
         r,c = loc
         for nr,nc in sideneigh(R, C, r, c):
             if board[nr][nc] == "1":
-                yield nr,nc
+                yield (nr,nc), None
 
     def solvefrom(r, c):
-        for ((nr, nc), level) in bfs(neigh, (r,c)):
+        for ((nr, nc), level, data) in bfs(neigh, (r,c)):
             board[nr][nc] = nth
 
     # Solve the border case

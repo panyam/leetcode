@@ -32,20 +32,20 @@ def solve_surrounded_regions(board: List[List[str]]):
 
     R = len(board)
     C = len(board[0])
-    def neigh(loc):
+    def neigh(loc, data, parents):
         r,c = loc
         for nr,nc in sideneigh(R, C, r, c):
             if board[nr][nc] == "O":
-                yield nr,nc
+                yield (nr,nc), None
 
     def solve_border(r, c):
         if board[r][c] == 'O':
-            for ((nr, nc), level) in bfs(neigh, (r,c)):
+            for ((nr, nc), level, data) in bfs(neigh, (r,c)):
                 board[nr][nc] = "Y"
 
     def solve_inland(r, c):
         if board[r][c] == 'O':
-            for ((nr, nc), level) in bfs(neigh, (r,c)):
+            for ((nr, nc), level, data) in bfs(neigh, (r,c)):
                 board[nr][nc] = "X"
 
     # Solve the border case
