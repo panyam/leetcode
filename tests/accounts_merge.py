@@ -1,4 +1,5 @@
 
+from tests.utils import run_cases
 from algos.unionfind import SetUnion
 from typing import List
 import unittest
@@ -23,13 +24,8 @@ def solution(accounts: List[List[str]]) -> List[List[str]]:
     for parent, items in emailsbyparent.items():
         items.sort()
         out.append([names[parent]] + items)
+    print("Emails: ", out)
     return out
-
-class TestMethods(unittest.TestCase):
-    def test_cases(self):
-        # self.assertEqual(solve_surrounded_regions(grid),solution)
-        for case, expected in cases[2:]:
-            self.assertEqual(list(sorted(solution(case))), list(sorted(expected)))
 
 cases = [
     (
@@ -54,6 +50,11 @@ cases = [
         [["David","David0@m.co","David1@m.co","David2@m.co","David3@m.co","David4@m.co","David5@m.co"]]
     ),
 ]
+
+class _TestMethods(unittest.TestCase):
+    def test_it(self):
+        # And now in dfs
+        run_cases(self, cases, solution, sort=True)
 
 if __name__ == '__main__':
     # Run with python -m unittest *.py

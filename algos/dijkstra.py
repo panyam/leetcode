@@ -1,7 +1,7 @@
 from collections import defaultdict
 from heapq import *
 
-def dijkstra(edges, f, t):
+def shortest_path(edges, f, t):
     g = defaultdict(list)
     for l,r,c in edges:
         g[l].append((c,r))

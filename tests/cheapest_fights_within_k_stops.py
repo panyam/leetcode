@@ -1,5 +1,5 @@
 
-from algos.djikstra import shortest_path 
+from algos.dijkstra import shortest_path 
 from typing import List
 import unittest
 from collections import defaultdict

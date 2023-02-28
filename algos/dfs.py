@@ -1,17 +1,4 @@
 
-def toposort(neigh, nodes):
-    dfs = DFS()
-    output = []
-    for n in nodes:
-        if dfs.discovered(n): continue
-        for evttype, currnode in dfs(neigh, n):
-            if evttype == "nodeexited":
-                output.push(currnode)
-            elif evttype == "edge":
-                if dfs.is_back_edge(currnode, nextnode):
-                    assert False, "have a cycle"
-    return output
-
 def simpledfs(neigh, node, visited=None):
     if visited is None: visited = {}
 
@@ -22,41 +9,59 @@ def simpledfs(neigh, node, visited=None):
             yield from simpledfs(neigh, nextnode, visited)
         visited[node] = False
 
+def toposort(neigh, nodes, output) -> bool:
+    dfs = DFS(yield_edges=True)
+    for n in nodes:
+        if dfs.discovered[n]: continue
+        for evttype, evtdata in dfs(neigh, n):
+            if evttype == "nodeexited":
+                currnode = evtdata
+                output.append(currnode)
+            elif evttype == "edge":
+                currnode,nextnode = evtdata
+                if dfs.is_back_edge(currnode, nextnode):
+                    return False
+    return True
+
 class DFS:
-    def __init__(self, is_directed=False, parents=None):
+    def __init__(self, directed=False, yield_edges=False, parents=None):
         from collections import defaultdict
-        if parents is None: parents = {}
+        if parents is None: parents = defaultdict(lambda: None)
         self.parents = parents
-        self.is_directed = is_directed
+        self.directed = directed
         self.processed = defaultdict(bool)
         self.discovered = defaultdict(bool)
         self.entry_times = defaultdict(int)
         self.exit_times = defaultdict(int)
+        self.yield_edges=yield_edges
         self.T = 0
 
-    def __call__(self, neighbors, currkey):
+    def __call__(self, neighbors, currnode):
         """ Performs a DFS traversal of a graph.
         We expect our graph to implement the same interface above. """
         parents = self.parents
-        self.discovered[currkey] = True
+        self.discovered[currnode] = True
         self.T += 1
-        self.entry_times[currkey] = self.T
+        self.entry_times[currnode] = self.T
 
-        yield "nodeentered", currkey
+        yield "nodeentered", currnode
 
-        for childkey in neighbors(currkey):
-            if not self.discovered[childkey]:
-                parents[childkey] = currkey
-                yield "edge", currkey, (childkey)
-                yield from self(neighbors, childkey)
-            elif not self.processed[childkey] or self.is_directed:
-                yield "edge", (currkey, childkey)
+        for childnode in neighbors(currnode):
+            if not self.discovered[childnode]:
+                parents[childnode] = currnode
 
-        yield "nodeexited", currkey
+                if self.yield_edges:
+                    yield "edge", (currnode, childnode)
+                yield from self(neighbors, childnode)
+            elif not self.processed[childnode] or self.directed:
+                if self.yield_edges: 
+                    yield "edge", (currnode, childnode)
+
+        yield "nodeexited", currnode
         
         self.T += 1
-        self.exit_times[currkey] = self.T
-        self.processed[currkey] = True
+        self.exit_times[currnode] = self.T
+        self.processed[currnode] = True
 
 
     def is_parent_edge(self, x, y):
