@@ -14,7 +14,9 @@ def solution(numCourses: int, prerequisites: List[List[int]]) -> List[int]:
         return needs[n]
 
     output = []
-    toposort(neighbors, range(numCourses), output)
+    for evt, data in toposort(neighbors, range(numCourses), output):
+        if evt == "CYCLE":
+            return []
     return output
 
 cases = [

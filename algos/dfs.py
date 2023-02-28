@@ -9,19 +9,26 @@ def simpledfs(neigh, node, visited=None):
             yield from simpledfs(neigh, nextnode, visited)
         visited[node] = False
 
-def toposort(neigh, nodes, output) -> bool:
+def toposort(neigh, nodes, output):
     dfs = DFS(yield_edges=True)
     for n in nodes:
         if dfs.discovered[n]: continue
+
+        # Signals start of a new DFS run from a root
+        # Indicating a new component
+        yield "START", n
         for evttype, evtdata in dfs(neigh, n):
             if evttype == "nodeexited":
                 currnode = evtdata
                 output.append(currnode)
+                # Indicates a new node being added
+                yield "ADDED", (currnode, output)
             elif evttype == "edge":
                 currnode,nextnode = evtdata
                 if dfs.is_back_edge(currnode, nextnode):
-                    return False
-    return True
+                    # Found a cycle - so yield this
+                    yield "CYCLE", (output, nextnode, currnode)
+                    break
 
 class DFS:
     def __init__(self, directed=False, yield_edges=False, parents=None):

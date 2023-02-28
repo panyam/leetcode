@@ -5,6 +5,7 @@ from algos.dfs import DFS, simpledfs, toposort
 from typing import List
 import unittest
 
+
 def solution(words: List[str]) -> str:
     from collections import defaultdict
     lessthan = defaultdict(set)
@@ -27,13 +28,29 @@ def solution(words: List[str]) -> str:
         # (which is not lexicographical sorting)
         return L1 <= L2
 
+    for ch in words[0]: nodes.add(ch)
+    for i in range(1, len(words)):
+        for ch in words[i]: nodes.add(ch)
+        if not analyze(words[i-1], words[i]): 
+            return ""
+
+    # Now we have a graph of "<" relationships
+    # print(lessthan.items())
+
+    # Do a topological sort here
+    output = []
+    for evt,data in toposort(lambda n: lessthan[n], list(sorted(nodes)), output):
+        if evt == "CYCLE":
+            return ""
+    return "".join(reversed(output))
+
 cases = [
     (
         ["abc", "ab"], ""
     ),
     (
         ["ab","adc"],
-        "abcd"
+        "cbda"
     ),
     (
         ["wrt","wrf","er","ett","rftt"],
