@@ -4,7 +4,6 @@ class Node:
         self.val = val
         self.next = self.prev = None
 
-
 def listcmp(l1, l2, cmpfunc=None):
     """ Compares two lists and return -1, 0 or 1 depending on whether
     values of first list <, == or > than values in the second list.
