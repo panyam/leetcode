@@ -14,41 +14,21 @@ func NewListNode[T any](value T) (out *ListNode[T]) {
 	return &ListNode[T]{Val: value}
 }
 
+func NewCircularList[T any](doubly bool, values ...T) (head, tail *ListNode[T]) {
+	head, tail = NewList(doubly, values...)
+	if head != nil {
+		tail.Next = head
+		head.Prev = tail
+	}
+	return
+}
+
 func NewList[T any](doubly bool, values ...T) (head, tail *ListNode[T]) {
 	for _, v := range values {
 		newnode := &ListNode[T]{Val: v}
-		head, tail = LNodeInsert(head, tail, newnode, tail, doubly)
+		head, tail = head.Insert(tail, newnode, tail, doubly)
 	}
 	return
-}
-
-// Return all values in a list
-func (n *ListNode[T]) Values() (out []T) {
-	for n != nil {
-		out = append(out, n.Val)
-		n = n.Next
-	}
-	return
-}
-
-func (n *ListNode[T]) FirstInvalidNode() int {
-	var prev *ListNode[T]
-	curr := n
-	i := 0
-	for curr != nil {
-		if prev != nil {
-			if prev.Next != curr {
-				return i
-			}
-		}
-		if curr.Prev != prev {
-			return i
-		}
-		prev = curr
-		curr = curr.Next
-		i += 1
-	}
-	return -1
 }
 
 // Inserts a node after a given 'after' node.  Our list is denoted by the head and tail nodes.
@@ -61,7 +41,7 @@ func (n *ListNode[T]) FirstInvalidNode() int {
 //
 // NOTE - newnode must NOT be in this list.  newnode's next and prev are first
 // clobbered to nil so if newnode belongs to this, remove it first (with Delete)
-func LNodeInsert[T any](head, tail, newnode *ListNode[T], after *ListNode[T], doubly bool) (*ListNode[T], *ListNode[T]) {
+func (head *ListNode[T]) Insert(tail, newnode *ListNode[T], after *ListNode[T], doubly bool) (*ListNode[T], *ListNode[T]) {
 	// Ensure that newnode does not have a successor or a predecessor
 	if newnode.Next != nil || newnode.Prev != nil {
 		log.Println("Next or Prev is not nil....")
@@ -103,7 +83,7 @@ func LNodeInsert[T any](head, tail, newnode *ListNode[T], after *ListNode[T], do
 
 // Deletes a particular node.
 // Parameter 'prev' is only required if we are talking about singly linked lists.
-func LNodeDelete[T any](head, tail, node, prev *ListNode[T], doubly bool) (*ListNode[T], *ListNode[T]) {
+func (head *ListNode[T]) Delete(tail, node, prev *ListNode[T], doubly bool) (*ListNode[T], *ListNode[T]) {
 	if head == nil {
 		return nil, nil
 	}
@@ -134,7 +114,7 @@ func LNodeDelete[T any](head, tail, node, prev *ListNode[T], doubly bool) (*List
 
 	next := node.Next
 	prev.Next = next
-	if doubly {
+	if doubly && next != nil {
 		next.Prev = prev
 	}
 
@@ -142,6 +122,39 @@ func LNodeDelete[T any](head, tail, node, prev *ListNode[T], doubly bool) (*List
 		tail = prev
 	}
 	return head, tail
+}
+
+// Return all values in a list
+func (n *ListNode[T]) Values() (out []T) {
+	curr := n
+	for curr != nil {
+		out = append(out, curr.Val)
+		curr = curr.Next
+		if curr == n {
+			break
+		}
+	}
+	return
+}
+
+func (n *ListNode[T]) FirstInvalidNode() int {
+	var prev *ListNode[T]
+	curr := n
+	i := 0
+	for curr != nil {
+		if prev != nil {
+			if prev.Next != curr {
+				return i
+			}
+		}
+		if curr.Prev != prev {
+			return i
+		}
+		prev = curr
+		curr = curr.Next
+		i += 1
+	}
+	return -1
 }
 
 // Starting at head of a singly linked list, returns the "previous" node for a given node.
@@ -203,9 +216,14 @@ func (n *ListNode[T]) Compare(another *ListNode[T], cmpfn func(a, b T) int) int 
 
 // Finds the length of the list starting from this node.
 func (n *ListNode[T]) Length() (l int) {
-	for n != nil {
+	curr := n
+	for curr != nil {
 		l += 1
-		n = n.Next
+		curr = curr.Next
+		// Handle circular lists
+		if curr == n {
+			break
+		}
 	}
 	return
 }
@@ -225,6 +243,10 @@ func (n *ListNode[T]) Find(matcher func(val T) bool) (prev *ListNode[T], curr *L
 		}
 		prev = curr
 		curr = curr.Next
+		// Handle the case of circular lists
+		if curr == n {
+			break
+		}
 	}
 	return
 }
@@ -265,7 +287,10 @@ func (n *ListNode[T]) Min(less func(a, b T) bool) (prev *ListNode[T], min *ListN
 }
 
 // Finds the midpoint node starting from this node (as well as its predecessor node).
-// Note that this also works if our list is circular!
+// Note that this also works if our list is circular!  Only caveat is if the list is circular
+// then prev would be nil if mid == Head.  This is because we dont want to assume the existing of
+// a previous node if this is a singly linked list and if mid is nil then the caller would know what
+// the tail is anyway in a circular linked list.
 func (n *ListNode[T]) Mid() (prev *ListNode[T], mid *ListNode[T]) {
 	slow := n
 	fast := n
