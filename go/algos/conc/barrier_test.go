@@ -1,7 +1,8 @@
-package algos
+package conc
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -30,9 +31,10 @@ func (c *counter) Get() (res int) {
 }
 func worker(c *counter, before *Barrier, after *Barrier, wg *sync.WaitGroup) {
 	for i := 0; i < 3; i++ {
+		log.Println("Came here...")
 		before.Wait()
 		c.Incr()
-		before.Wait()
+		after.Wait()
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
 		fmt.Println(c.Get())
 	}
