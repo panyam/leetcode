@@ -2,7 +2,6 @@ package conc
 
 import (
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -29,13 +28,12 @@ func (c *counter) Get() (res int) {
 	c.Unlock()
 	return
 }
-func worker(c *counter, before *Barrier, after *Barrier, wg *sync.WaitGroup) {
+func worker(wid int, c *counter, before *Barrier, after *Barrier, wg *sync.WaitGroup) {
 	for i := 0; i < 3; i++ {
-		log.Println("Came here...")
-		before.Wait()
+		before.Wait(wid)
 		c.Incr()
-		after.Wait()
-		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)
+		before.Wait(wid)
+		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 		fmt.Println(c.Get())
 	}
 	wg.Done()
@@ -49,7 +47,7 @@ func ExampleBarrier() {
 	c := counter{}
 	wg.Add(workers)
 	for i := 0; i < workers; i++ {
-		go worker(&c, before, after, &wg)
+		go worker(i, &c, before, after, &wg)
 	}
 	wg.Wait()
 	// Output:
