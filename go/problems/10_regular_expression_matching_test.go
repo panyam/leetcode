@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"testing"
 
 	"github.com/panyam/leetcode/go/ds"
@@ -66,7 +65,6 @@ It is guaranteed for each appearance of the character '*', there will be a previ
 func isMatch_Recursive(s string, p string) bool {
 	var helper func(s string, si, S int, p string, pi, P int) bool
 	helper = func(s string, si, S int, p string, pi, P int) bool {
-		log.Println("Here on: ", si, pi)
 		if si == S { // empty strings
 			if pi == P {
 				return true // empty pattern
@@ -139,8 +137,7 @@ func isMatch(s string, p string) bool {
 func TestProblem10(t *testing.T) {
 	funcs := []func(string, string) bool{isMatch_Recursive, isMatch}
 
-	for idx, fn := range funcs {
-		log.Println("Testing with fn: ", idx)
+	for _, fn := range funcs {
 		assert.False(t, fn("aa", "a"))
 		assert.True(t, fn("aa", "a*"))
 		assert.True(t, fn("ab", ".*"))
