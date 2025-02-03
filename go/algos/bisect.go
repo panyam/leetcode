@@ -1,6 +1,6 @@
 package algos
 
-// Problems: 704, 278, 35
+// Problems: 704, 278, 35, 69
 // https://leetcode.com/problems/first-bad-version/
 //
 // We have a generic bisect method we should use for all
@@ -13,7 +13,7 @@ package algos
 //
 //	the following:
 //
-//	(dir, result, includemid)
+//	(dir, includemid)
 //
 // dir can be 0, -1 or 1.
 // if dir is 0 then we stop the bisection there itself
@@ -24,13 +24,8 @@ package algos
 // right we also include "mid" in the new range so we dont skip
 // "mid".  This is useful in some problems.
 //
-// A state parameter can also be passed to the bisect method to
-// change or accumulate state between calls to bisect.
-//
-// By default bisect returns the "mid" index where the bisection
-// ends - but user can do other things and add things into their
-// own context/state objects
-func Bisect(lo, hi int, cmpfunc func(lo, hi, mid int) (newmid int, incmid bool)) int {
+// By default bisect returns the "mid" index where the bisection ends
+func BisectAdv(lo, hi int, cmpfunc func(lo, hi, mid int) (newmid int, incmid bool)) int {
 	for lo <= hi {
 		// mid = ((lo + hi) / 2)
 		mid := lo + (hi-lo)/2
@@ -47,6 +42,31 @@ func Bisect(lo, hi int, cmpfunc func(lo, hi, mid int) (newmid int, incmid bool))
 			if incmid {
 				lo -= 1
 			}
+		}
+	}
+	return -1
+}
+
+// Simpler Bisection
+//
+// Just provide lo, hi and checker function that returns a new low, high and when to stop
+// When stop == true, the low and hi can be used to return values that the caller should return.
+//
+// When doing the bisection always think of the following cases:
+
+// target < F[lo]			// most commonly lo = 0
+// target > F[hi]			// most commonly hi == N - 1
+// target == F[mid]		// most often - success case
+// lo == hi
+// lo == hi + 1  AND F[lo] < target < F[hi]		<--- case of insertion
+func Bisect(lo, hi int, cmpfunc func(lo, hi, mid int) (newlow, newhi int, stop bool)) int {
+	stop := false
+	for lo <= hi && !stop {
+		// mid = ((lo + hi) / 2)
+		mid := lo + (hi-lo)/2
+		lo, hi, stop = cmpfunc(lo, hi, mid)
+		if stop {
+			return lo
 		}
 	}
 	return -1
