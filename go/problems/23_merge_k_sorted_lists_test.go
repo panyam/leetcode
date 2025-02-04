@@ -7,7 +7,6 @@ package main
 
 import (
 	"container/heap"
-	"log"
 	"sort"
 	"testing"
 
@@ -81,7 +80,7 @@ func (l *LLQueue) Pop() any {
 }
 
 func mergeKLists(heads []*ListNode) *ListNode {
-	log.Println("Running: ", heads)
+	// log.Println("Running: ", heads)
 	var lists LLQueue
 	heap.Init(&lists)
 	for _, h := range heads {
