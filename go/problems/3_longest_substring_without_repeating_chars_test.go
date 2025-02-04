@@ -1,3 +1,8 @@
+/*
+ProblemId: 3
+ProblemTitle: Longest Substring Without Repeating Characters
+ProblemLink: https://leetcode.com/problems/longest-substring-without-repeating-characters/
+*/
 package main
 
 import (
@@ -6,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Problem 3 - https://leetcode.com/problems/longest-substring-without-repeating-characters/description/
 // Given a string s, find the length of the longest substring without repeating characters.
 
 // Brute force here is to find every pair of indices and see how many uniques it has (use a hashmap)
