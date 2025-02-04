@@ -1,3 +1,8 @@
+/*
+ProblemId: 21
+ProblemTitle: Merge Two Sorted Lists
+ProblemLink: https://leetcode.com/problems/merge-two-sorted-lists/
+*/
 package main
 
 import (
@@ -6,15 +11,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/**
-<Problem Number>. <Problem Title> - <Problem Link>
-
-<Problem Description Here>
-*/
-
-func problemFunction() {
-}
+// BeginProblemTests
 
 func TestProblemNumber(t *testing.T) {
 	assert.True(t, true)
+}
+
+// EndProblemTests
+
+// ProblemImpementation:
+// Problem impl here fo easy copying
+func problemFunction() {
 }

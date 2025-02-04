@@ -57,6 +57,8 @@ func BisectAdv(lo, hi int, cmpfunc func(lo, hi, mid int) (newmid int, incmid boo
 // target < F[lo]			// most commonly lo = 0
 // target > F[hi]			// most commonly hi == N - 1
 // target == F[mid]		// most often - success case
+
+// target != F[mid]		// problems mainly here combined with bottom two
 // lo == hi
 // lo == hi + 1  AND F[lo] < target < F[hi]		<--- case of insertion
 func Bisect(lo, hi int, cmpfunc func(lo, hi, mid int) (newlow, newhi int, stop bool)) int {
