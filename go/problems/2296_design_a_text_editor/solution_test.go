@@ -1,12 +1,66 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"testing"
 
+	_ "embed"
+
+	"github.com/panyam/leetcode/go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 // BeginProblemTests
+
+//go:embed "testcases/testcases.full"
+var smallTestCases string
+
+//go:embed "testcases/largecase1/commands"
+var largeCommands string
+
+//go:embed "testcases/largecase1/args"
+var largeArgs string
+
+//go:embed "testcases/largecase1/expected"
+var largeExpVals string
+
+type TestCase utils.CommandTestCase
+
+func (tc *TestCase) Run(t *testing.T, id string) {
+	log.Println("Test Case: ", id)
+	var ed TextEditor
+	for i, cmd := range tc.Commands {
+		args := tc.Args[i].([]any)
+		expval := tc.Expected[i]
+		if cmd == "TextEditor" {
+			ed = Constructor()
+		} else if cmd == "addText" {
+			ed.AddText(args[0].(string))
+		} else if cmd == "deleteText" {
+			assert.Equal(t, int(expval.(float64)), ed.DeleteText(int(args[0].(float64))))
+		} else if cmd == "cursorRight" {
+			assert.Equal(t, expval, ed.CursorRight(int(args[0].(float64))))
+		} else if cmd == "cursorLeft" {
+			assert.Equal(t, expval, ed.CursorLeft(int(args[0].(float64))))
+		} else {
+			log.Fatalf("Invalid command: %s", cmd)
+		}
+	}
+}
+
+func Test2296_MultipleCases(t *testing.T) {
+	cases := utils.LoadCases[TestCase]([]byte(smallTestCases))
+
+	for i, tc := range cases {
+		tc.Run(t, fmt.Sprintf("smallcase_%d", i))
+	}
+}
+
+func Test2296_LargeCase(t *testing.T) {
+	tc := utils.LoadLargeCase[TestCase](map[string][]byte{"commands": []byte(largeCommands), "args": []byte(largeArgs), "expected": []byte(largeExpVals)})
+	tc.Run(t, "largecase")
+}
 
 func Test2296_1(t *testing.T) {
 	ed := Constructor()

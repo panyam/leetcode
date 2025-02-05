@@ -1,17 +1,17 @@
 [
   {
     "commands": ["TextEditor","addText","deleteText","addText","cursorRight","cursorLeft","deleteText","cursorLeft","cursorRight"],
-    "args: [[],["leetcode"],[4],["practice"],[3],[8],[10],[2],[6]],
-    "expected": [null,"","",0]
+    "args": [[],["leetcode"],[4],["practice"],[3],[8],[10],[2],[6]],
+    "expected": [null,null,4,null,"etpractice","leet",4,"","practi"]
   },
   {
     "commands": ["TextEditor","addText","cursorLeft","deleteText","cursorLeft","addText","cursorRight"],
     "args": [[],["bxyackuncqzcqo"],[12],[3],[5],["osdhyvqxf"],[10]],
-    "expected": [null,null,"bx",2,"",null,"yackuncqzc"],
-  }
+    "expected": [null,null,"bx",2,"",null,"yackuncqzc"]
+  },
   {
     "commands": ["TextEditor","addText","deleteText","cursorLeft","cursorRight","addText","cursorLeft"],
-    "args: [[],["cyberworks"],[21],[2],[6],["aaaaa"],[1]],
+    "args": [[],["cyberworks"],[21],[2],[6],["aaaaa"],[1]],
     "expected": [null,null,10,"","",null,"aaaa"]
-  },
+  }
 ]
