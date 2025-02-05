@@ -15,3 +15,14 @@ func makeListWithCycle(nth int, values ...int) (*ListNode, *ListNode) {
 	}
 	return head, tail
 }
+
+type Node struct {
+	Val   int
+	Left  *Node
+	Right *Node
+	Child *Node // For problem 430
+}
+
+func NewTree(values ...int) *Node {
+	return nil
+}

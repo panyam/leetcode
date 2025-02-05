@@ -6,7 +6,6 @@ ProblemLink: https://leetcode.com/problems/coin-change/
 package main
 
 import (
-	"log"
 	"sort"
 	"testing"
 
@@ -17,7 +16,7 @@ import (
 
 func TestProblem322(t *testing.T) {
 	runTest := func(coins []int, amount int, expected int) {
-		log.Println("Testing Coins, Amount: ", coins, amount)
+		// log.Println("Testing Coins, Amount: ", coins, amount)
 		assert.Equal(t, expected, coinChangeIterative(coins, amount))
 		assert.Equal(t, expected, coinChangeWithCache(coins, amount, nil))
 	}
