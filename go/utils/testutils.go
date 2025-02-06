@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // we can have test cases in various formats
@@ -59,4 +62,12 @@ func LoadLargeCase[T any](contents map[string][]byte) (out T) {
 		panic(err)
 	}
 	return
+}
+
+func ExpectValOrContains(t *testing.T, exp any, res any, msg ...any) bool {
+	if listvals, ok := exp.([]any); ok {
+		return assert.Contains(t, listvals, res, msg...)
+	} else {
+		return assert.Equal(t, exp, res, msg...)
+	}
 }

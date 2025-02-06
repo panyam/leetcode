@@ -6,6 +6,7 @@ ProblemLink: https://leetcode.com/problems/merge-two-sorted-lists/
 package main
 
 import (
+	"container/list"
 	"log"
 	"maps"
 	"slices"
@@ -15,8 +16,6 @@ import (
 type Row struct {
 	Count int
 	Keys  map[string]bool
-	Next  *Row
-	Prev  *Row
 }
 
 func NewRow(c int) *Row {
@@ -33,157 +32,117 @@ func (r *Row) Any() string {
 	return ""
 }
 
-func (r *Row) AddWord(word string) {
+func (r *Row) Add(word string) {
 	r.Keys[word] = true
 }
 
-func (r *Row) RemoveWord(word string) {
+func (r *Row) Remove(word string) bool {
 	if _, ok := r.Keys[word]; ok {
 		delete(r.Keys, word)
 	}
+	return len(r.Keys) > 0
 }
 
 type AllOne struct {
-	rowmap map[string]*Row
-	head   *Row
-	tail   *Row
+	rowmap map[string]*list.Element
+	rows   *list.List
 }
 
 func (this *AllOne) Print(msg string) {
 	log.Println(msg, "-----------")
-	for r := this.head; r != nil; r = r.Next {
-		log.Printf("Count: %d, Keys: %s", r.Count, strings.Join(slices.Collect(maps.Keys(r.Keys)), ", "))
+	for r := this.rows.Front(); r != nil; r = r.Next() {
+		row := r.Value.(*Row)
+		log.Printf("Count: %d, Keys: %s", row.Count, strings.Join(slices.Collect(maps.Keys(row.Keys)), ", "))
 	}
 }
 
 // Gets the row corresponding the count == 1
-func (this *AllOne) getR1() *Row {
-	if this.head == nil || this.head.Count > 1 {
+func (this *AllOne) R1() *list.Element {
+	head := this.rows.Front()
+	if head == nil || head.Value.(*Row).Count > 1 {
 		nn := NewRow(1)
-		nn.Next = this.head
-		if this.head != nil {
-			this.head.Prev = nil
-		}
-		this.head = nn
+		this.rows.PushFront(nn)
 	}
-	if this.head.Next == nil {
-		this.tail = this.head
-	}
-	return this.head
-}
-
-func (this *AllOne) getNextRow(r *Row) *Row {
-	next := r.Next
-	if next == nil || next.Count != r.Count+1 {
-		// we are at the tail
-		nn := NewRow(r.Count + 1)
-		r.Next = nn
-		nn.Prev = r
-		nn.Next = next
-		if next != nil {
-			next.Prev = nn
-		} else {
-			this.tail = nn
-		}
-	}
-	return r.Next
-}
-
-func (this *AllOne) getPrevRow(r *Row) *Row {
-	prev := r.Prev
-	if prev == nil || prev.Count != r.Count-1 {
-		// we are at the tail
-		pp := NewRow(r.Count - 1)
-		r.Prev = pp
-		pp.Next = r
-		pp.Prev = prev
-		if prev != nil {
-			prev.Next = pp
-		} else {
-			this.head = pp
-		}
-	}
-	return r.Prev
-}
-
-func (this *AllOne) removeRow(r *Row) {
-	this.Print("...")
-	log.Print("Before removing row: ", r.Count, r.Keys)
-	prev := r.Prev
-	next := r.Next
-	if prev != nil {
-		prev.Next = next
-	}
-	if next != nil {
-		next.Prev = prev
-	}
-	if r == this.head {
-		this.head = next
-	}
-	if r == this.tail {
-		this.tail = prev
-	}
-	if this.head == nil || this.tail == nil {
-		this.head = nil
-		this.tail = nil
-	}
-	r.Next = nil
-	r.Prev = nil
-	log.Print("After removing row: ", r.Count, r.Keys)
-	this.Print("...")
+	return this.rows.Front()
 }
 
 func Constructor() AllOne {
 	return AllOne{
-		rowmap: make(map[string]*Row),
+		rowmap: map[string]*list.Element{},
+		rows:   list.New(),
 	}
 }
 
 func (this *AllOne) Inc(key string) {
-	row := this.rowmap[key]
-	if row == nil {
-		// it does not exist - so let us add it to row 1
-		row = this.getR1()
-		row.AddWord(key)
-		this.rowmap[key] = row
-	} else {
-		nextrow := this.getNextRow(row)
-		row.RemoveWord(key)
-		if len(row.Keys) == 0 {
-			this.removeRow(row)
-		}
-		nextrow.AddWord(key)
-		this.rowmap[key] = nextrow
+	rowel := this.rowmap[key]
+	if rowel == nil {
+		rowel = this.R1()
+		rowel.Value.(*Row).Add(key)
+		this.rowmap[key] = rowel
+		return
 	}
+	row := rowel.Value.(*Row)
+	nextRowEl := rowel.Next()
+	if nextRowEl == nil || nextRowEl.Value.(*Row).Count != row.Count+1 {
+		nn := NewRow(row.Count + 1)
+		nextRowEl = this.rows.InsertAfter(nn, rowel)
+	}
+
+	nextRow := nextRowEl.Value.(*Row)
+	nextRow.Add(key)
+	if !row.Remove(key) {
+		// ermove row
+		this.rows.Remove(rowel)
+	}
+	this.rowmap[key] = nextRowEl
 }
 
 func (this *AllOne) Dec(key string) {
-	row := this.rowmap[key]
-	if row == nil {
-		// doesnt exist so return
+	rowel := this.rowmap[key]
+	if rowel == nil {
+		// nothing to do
 		return
 	}
 
-	// it does not exist - so let us add it to row 1
-	if row.Count > 1 {
-		prevrow := this.getPrevRow(row)
-		prevrow.AddWord(key)
-		this.rowmap[key] = prevrow
-	} else {
-		this.rowmap[key] = nil
+	row := rowel.Value.(*Row)
+	nextCount := row.Count - 1
+	this.rowmap[key] = nil
+	if nextCount > 0 {
+		prevRowEl := rowel.Prev()
+		if prevRowEl == nil || prevRowEl.Value.(*Row).Count != nextCount {
+			nn := NewRow(nextCount)
+			prevRowEl = this.rows.InsertBefore(nn, rowel)
+		}
+
+		prevRow := prevRowEl.Value.(*Row)
+		prevRow.Add(key)
+		this.rowmap[key] = prevRowEl
 	}
-
-	row.RemoveWord(key)
-	if len(row.Keys) == 0 {
-		this.removeRow(row)
+	if !row.Remove(key) {
+		// ermove row
+		this.rows.Remove(rowel)
 	}
 }
 
-func (this *AllOne) GetMaxKey() (key string) {
-	this.Print("Calling GetmaxKey")
-	return this.tail.Any()
+func (this *AllOne) GetMaxKey() string {
+	if this.rows.Back() == nil {
+		return ""
+	}
+	return this.rows.Back().Value.(*Row).Any()
 }
 
-func (this *AllOne) GetMinKey() (key string) {
-	return this.head.Any()
+func (this *AllOne) GetMinKey() string {
+	if this.rows.Front() == nil {
+		return ""
+	}
+	return this.rows.Front().Value.(*Row).Any()
 }
+
+/**
+ * Your AllOne object will be instantiated and called as such:
+ * obj := Constructor();
+ * obj.Inc(key);
+ * obj.Dec(key);
+ * param_3 := obj.GetMaxKey();
+ * param_4 := obj.GetMinKey();
+ */

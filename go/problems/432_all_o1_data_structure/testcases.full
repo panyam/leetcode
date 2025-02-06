@@ -12,13 +12,13 @@
   ,{
     "commands": ["AllOne","inc","inc","inc","inc","getMaxKey","inc","inc","inc","dec","inc","inc","inc","getMaxKey"],
     "args": [[],["hello"],["goodbye"],["hello"],["hello"],[],["leet"],["code"],["leet"],["hello"],["leet"],["code"],["code"],[]],
-    "expected": [null,null,null,null,null,"hello",null,null,null,null,null,null,null,"leet"]
+    "expected": [null,null,null,null,null,"hello",null,null,null,null,null,null,null,["leet", "code"]]
   }
   ,{
     "commands": ["AllOne","inc","inc","inc","inc","inc","inc","inc","inc","inc","inc","inc","inc","dec","dec","dec","dec","dec","dec","inc","inc","inc","inc","getMaxKey","getMinKey","inc","inc","getMaxKey","getMinKey","inc","dec","getMaxKey","getMinKey"],
     "args": [[],["a"],["b"],["c"],["d"],["e"],["f"],["g"],["h"],["i"],["j"],["k"],["l"],["a"],["b"],["c"],["d"],["e"],["f"],["g"],["h"],["i"],["j"],[],[],["k"],["l"],[],[],["a"],["j"],[],[]],
-    "expected": [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"i","k",null,null,"g","g",null,null,"g","a"]
-  }
+    "expected": [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,["i", "h", "g", "j"],["k", "l"],null,null,["g", "l", "h", "i", "k"],["g", "i", "l", "h", "k", "j"],null,null,["g", "h", "i", "k", "l"],["j", "a"]]
+    }
   ,{
     "commands": ["AllOne","inc","inc","inc","dec","inc","inc","getMaxKey","dec","dec","dec","getMaxKey"],
     "args": [[],["hello"],["world"],["hello"],["world"],["hello"],["leet"],[],["hello"],["hello"],["hello"],[]],

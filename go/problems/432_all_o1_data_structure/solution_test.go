@@ -8,7 +8,6 @@ import (
 	_ "embed"
 
 	"github.com/panyam/leetcode/go/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 // BeginProblemTests
@@ -24,7 +23,7 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 	for i, cmd := range tc.Commands {
 		args := tc.Args[i].([]any)
 		expval := tc.Expected[i]
-		log.Println("Running command: ", cmd)
+		// log.Println("Running command: ", cmd)
 		if cmd == "AllOne" {
 			it = Constructor()
 		} else if cmd == "inc" {
@@ -32,10 +31,17 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 		} else if cmd == "dec" {
 			it.Dec(args[0].(string))
 		} else if cmd == "getMaxKey" {
-			assert.Equal(t, expval.(string), it.GetMaxKey(), fmt.Sprintf("Mismatch in command: %d, %s", i, cmd))
+			// it.Print("getmax: ")
+			res := it.GetMaxKey()
+			if !utils.ExpectValOrContains(t, expval, res) {
+				it.Print(fmt.Sprintf("Mismatch in command: %d, %s", i, cmd))
+			}
 		} else if cmd == "getMinKey" {
-			it.Print("Before getMinKey")
-			assert.Equal(t, expval.(string), it.GetMinKey(), fmt.Sprintf("Mismatch in command: %d, %s", i, cmd))
+			res := it.GetMinKey()
+			if !utils.ExpectValOrContains(t, expval, res) {
+				log.Printf("Mismatch in command: %d, %s", i, cmd)
+				it.Print("")
+			}
 		} else {
 			log.Fatalf("Invalid command: %s", cmd)
 		}
