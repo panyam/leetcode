@@ -1,0 +1,12 @@
+[
+  {
+    "commands": ["MaxStack","push","push","push","top","popMax","top","peekMax","pop","top"],
+    "args": [[],[5],[1],[5],[],[],[],[],[],[]],
+    "expected": [null,null,null,null,5,5,1,5,1,5]
+  }
+  ,{
+    "commands": ["MaxStack","push","push","popMax","peekMax"],
+    "args": [[],[5],[1],[],[]],
+    "expected": [null,0,0,0,0]
+  }
+]
