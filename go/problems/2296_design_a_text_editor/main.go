@@ -5,77 +5,45 @@ ProblemLink: https://leetcode.com/problems/merge-two-sorted-lists/
 */
 package main
 
-import "log"
-
-// ProblemImpementation:
-// Problem impl here fo easy copying
-type Node struct {
-	Char rune
-	Next *Node
-	Prev *Node
-}
+import (
+	"container/list"
+	"log"
+)
 
 type TextEditor struct {
 	// cursor is the current node after which text is appended.
 	// it can never be the head node which is used a sentinel
-	Dummy *Node
-	Curr  *Node
-}
-
-func (t *TextEditor) Print(msg string) {
-	n := t.Curr
-	log.Println(msg, "---------")
-	if n == nil {
-		log.Println("nil")
-		return
-	}
-	for n.Prev != nil {
-		n = n.Prev
-	}
-	for ; n != nil; n = n.Next {
-		if n == t.Dummy {
-			log.Print("<DUMMY>")
-		} else if n == t.Curr {
-			log.Print(string(n.Char), " <- Cursor")
-		} else {
-			log.Print(string(n.Char))
-		}
-	}
-	log.Println("-----")
+	Dummy *list.Element
+	Chars *list.List
+	Curr  *list.Element
 }
 
 func Constructor() (out TextEditor) {
-	out.Dummy = &Node{Char: 0}
+	out.Chars = list.New()
+	out.Dummy = out.Chars.PushFront(0)
 	out.Curr = out.Dummy
 	return
 }
 
-func toNodes(text string) (h *Node, t *Node) {
-	for _, ch := range text {
-		n := &Node{Char: ch}
-		if h == nil {
-			h = n
+func (t *TextEditor) Print(msg string) {
+	log.Println(msg, "---------")
+	for n := t.Chars.Front(); n != nil; n = n.Next() {
+		if n == t.Dummy {
+			log.Print("<DUMMY>")
+		} else if n == t.Curr {
+			log.Print(n.Value, " <- Cursor")
 		} else {
-			t.Next = n
-			n.Prev = t
+			log.Print(n.Value)
 		}
-		t = n
 	}
-	return
+
+	log.Println("-----")
 }
 
 func (this *TextEditor) AddText(text string) {
-	h, t := toNodes(text)
-	if this.Curr != nil {
-		next := this.Curr.Next
-		this.Curr.Next = h
-		h.Prev = this.Curr
-		t.Next = next
-		if next != nil {
-			next.Prev = t
-		}
+	for _, ch := range text {
+		this.Curr = this.Chars.InsertAfter(ch, this.Curr)
 	}
-	this.Curr = t
 }
 
 func (this *TextEditor) DeleteText(k int) int {
@@ -84,15 +52,9 @@ func (this *TextEditor) DeleteText(k int) int {
 		if this.Curr == this.Dummy {
 			break
 		}
-		prev := this.Curr.Prev
-		next := this.Curr.Next
-		if prev != nil {
-			prev.Next = next
-			this.Curr = prev
-		}
-		if next != nil {
-			next.Prev = prev
-		}
+		prev := this.Curr.Prev()
+		this.Chars.Remove(this.Curr)
+		this.Curr = prev
 		i++
 	}
 	return i
@@ -103,7 +65,17 @@ func (this *TextEditor) CursorLeft(k int) string {
 		if this.Curr == this.Dummy {
 			break
 		}
-		this.Curr = this.Curr.Prev
+		this.Curr = this.Curr.Prev()
+	}
+	return this.getLast(10)
+}
+
+func (this *TextEditor) CursorRight(k int) string {
+	for range k {
+		if this.Curr.Next() == nil {
+			break
+		}
+		this.Curr = this.Curr.Next()
 	}
 	return this.getLast(10)
 }
@@ -112,27 +84,12 @@ func (this *TextEditor) getLast(rem int) (out string) {
 	// Now get the last 10 chars at most
 	runes := make([]rune, rem)
 	i := rem
-	curr := this.Curr
-	for range rem {
-		if curr == this.Dummy {
-			break
-		}
+	for curr := this.Curr; i > 0 && curr != this.Dummy; curr = curr.Prev() {
 		i--
-		runes[i] = curr.Char
-		curr = curr.Prev
+		runes[i] = curr.Value.(rune)
 	}
 	out = string(runes[i:])
 	return
-}
-
-func (this *TextEditor) CursorRight(k int) string {
-	for range k {
-		if this.Curr.Next == nil {
-			break
-		}
-		this.Curr = this.Curr.Next
-	}
-	return this.getLast(10)
 }
 
 /**
