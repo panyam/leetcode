@@ -24,10 +24,9 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 	for i, cmd := range tc.Commands {
 		args := tc.Args[i].([]any)
 		expval := tc.Expected[i]
-		log.Println("Running command: ", cmd, args)
+		// log.Println("Running command: ", cmd, args)
 		if cmd == "LFUCache" {
 			it = Constructor(int(args[0].(float64)))
-			it.Debug("test")
 		} else if cmd == "put" {
 			it.Put(int(args[0].(float64)), int(args[1].(float64)))
 		} else if cmd == "get" {
@@ -35,7 +34,6 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 		} else {
 			log.Fatalf("Invalid command: %s", cmd)
 		}
-		it.Debug("xxxxxxxx")
 	}
 }
 
@@ -44,7 +42,6 @@ func Test146_MultipleCases(t *testing.T) {
 
 	for i, tc := range cases {
 		tc.Run(t, fmt.Sprintf("smallcase_%d", i))
-		return
 	}
 }
 

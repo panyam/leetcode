@@ -24,7 +24,7 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 	for i, cmd := range tc.Commands {
 		args := tc.Args[i].([]any)
 		expval := tc.Expected[i]
-		log.Println("Running command: ", cmd, args)
+		// log.Println("Running command: ", cmd, args)
 		if cmd == "LRUCache" {
 			it = Constructor(int(args[0].(float64)))
 		} else if cmd == "put" {

@@ -35,6 +35,7 @@ type CommandTestCase struct {
 func LoadCases[T any](contents []byte) (out []*T) {
 	err := json.Unmarshal(contents, &out)
 	if err != nil {
+		log.Println("Error loading cases: ", err)
 		panic(err)
 	}
 	return

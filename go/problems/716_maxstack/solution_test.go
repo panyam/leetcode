@@ -24,7 +24,7 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 	for i, cmd := range tc.Commands {
 		args := tc.Args[i].([]any)
 		expval := tc.Expected[i]
-		log.Println("Running command: ", cmd)
+		// log.Println("Running command: ", cmd)
 		if cmd == "MaxStack" {
 			ms = Constructor()
 		} else if cmd == "push" {
