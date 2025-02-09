@@ -41,7 +41,7 @@ func calcEquation(equations [][]string, values []float64, queries [][]string) (o
 			log.Println("Finding from: ", startVar, endVar)
 			sofars := make(map[string]map[string]float64)
 			found := false
-			bfs := graphs.BFS[string]{Neighbors: adjmatrix.Neighbors}
+			bfs := graphs.BFS[string]{Neighbors: adjmatrix.Neighbors, Directed: true}
 			bfs.EnteringVertex = func(v string) bool {
 				if sofars[v] == nil {
 					sofars[v] = map[string]float64{
@@ -61,7 +61,7 @@ func calcEquation(equations [][]string, values []float64, queries [][]string) (o
 				}
 				return true
 			}
-			bfs.Run(startVar, true)
+			bfs.Run(startVar)
 			if !found {
 				out = append(out, -1)
 			}

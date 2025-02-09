@@ -1,6 +1,8 @@
 package graphs
 
-import "iter"
+import (
+	"iter"
+)
 
 /*
 Performs a BFS traversal of a graph from a given node.
@@ -17,6 +19,7 @@ Useful notes:
     edges.
 */
 type BFS[V comparable] struct {
+	Directed   bool
 	Processed  map[V]bool
 	Discovered map[V]bool
 	Parents    map[V]V
@@ -28,7 +31,7 @@ type BFS[V comparable] struct {
 	ProcessEdge    func(start V, end V) bool
 }
 
-func (b *BFS[V]) Run(start V, isDirected bool) {
+func (b *BFS[V]) Run(start V) {
 	if b.Processed == nil {
 		b.Processed = make(map[V]bool)
 	}
@@ -46,22 +49,20 @@ func (b *BFS[V]) Run(start V, isDirected bool) {
 	for len(queue) > 0 {
 		var nextq []V
 		for _, currVertex := range queue {
-			if b.EnteringVertex != nil {
-				if !b.EnteringVertex(currVertex) {
-					return
-				}
+			if b.EnteringVertex != nil && !b.EnteringVertex(currVertex) {
+				return
 			}
 
 			b.Processed[currVertex] = true
 
 			// Now go through all its children
+			// log.Println("Curr: ", currVertex)
 			for destVertex := range b.Neighbors(currVertex) {
-				if !b.Processed[destVertex] || isDirected {
-					if b.ProcessEdge != nil {
-						if !b.ProcessEdge(currVertex, destVertex) {
-							// we were asked to stop
-							return
-						}
+				// log.Println("Dest: ", destVertex, b.Processed[destVertex])
+				if !b.Processed[destVertex] || b.Directed {
+					if b.ProcessEdge != nil && !b.ProcessEdge(currVertex, destVertex) {
+						// we were asked to stop
+						return
 					}
 				}
 				if !b.Discovered[destVertex] {
@@ -71,10 +72,11 @@ func (b *BFS[V]) Run(start V, isDirected bool) {
 					b.Parents[destVertex] = currVertex
 				}
 			}
-			if b.LeavingVertex != nil {
-				b.LeavingVertex(currVertex)
+			if b.LeavingVertex != nil && !b.LeavingVertex(currVertex) {
+				return
 			}
 		}
+		// log.Println("Curr, Next Q: ", nextq)
 		queue = nextq
 	}
 }

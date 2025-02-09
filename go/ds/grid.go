@@ -1,6 +1,8 @@
 package ds
 
-import "iter"
+import (
+	"iter"
+)
 
 // A basic twod array - ideally for cache in DP problems
 
@@ -64,11 +66,9 @@ func IterSideNeighbors(R, C, r, c int) iter.Seq2[int, int] {
 			for dc := -1; dc <= 1; dc += 1 {
 				nr, nc := r+dr, c+dc
 				if nr >= 0 && nr < R && nc >= 0 && nc < C {
-					if nr*nc == 0 { // Rules out (dr,dc) in (-1, -1), (1, -1), (-1, 1), (1, 1)
-						if nr != r || nc != c { // This rules out dr,dc = (0,0)
-							if !yield(nr, nc) {
-								return
-							}
+					if dr*dc == 0 && (nr != r || nc != c) { // Rules out (dr,dc) in (-1, -1), (1, -1), (-1, 1), (1, 1)
+						if !yield(nr, nc) {
+							return
 						}
 					}
 				}
