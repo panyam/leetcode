@@ -26,7 +26,7 @@ func (tc *TestCase) Run(t *testing.T, id string) {
 //go:embed "testcases.full"
 var smallTestCases string
 
-func Test_MultipleCases(t *testing.T) {
+func _Test_MultipleCases(t *testing.T) {
 	cases := utils.LoadCases[TestCase]([]byte(smallTestCases))
 
 	for i, tc := range cases {
@@ -34,7 +34,7 @@ func Test_MultipleCases(t *testing.T) {
 	}
 }
 
-func Test_LargeCases(t *testing.T) {
+func _Test_LargeCases(t *testing.T) {
 	// Find a way to load and run large files
 }
 

@@ -3,7 +3,6 @@ module github.com/panyam/leetcode/go
 go 1.23.4
 
 require (
-	github.com/panyam/goutils v0.1.2
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 )

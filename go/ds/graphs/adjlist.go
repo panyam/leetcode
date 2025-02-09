@@ -5,22 +5,36 @@ import "iter"
 // Graph representation based on adjacency lists
 type AdjList[N comparable, E any] struct {
 	// Edges[i] denotes all list of edges for a node i
-	Edges map[N]*EdgeList[N, E]
+	edges map[N]*EdgeList[N, E]
 }
 
 func NewAdjList[N comparable, E any]() *AdjList[N, E] {
 	return &AdjList[N, E]{
-		Edges: make(map[N]*EdgeList[N, E]),
+		edges: make(map[N]*EdgeList[N, E]),
 	}
 }
 
 func (a *AdjList[N, E]) HasVertex(node N) bool {
-	return a.Edges[node] != nil
+	return a.edges[node] != nil
 }
 
-func (a *AdjList[N, E]) Neighbors(node N) iter.Seq2[N, E] {
+func (a *AdjList[N, E]) Neighbors(node N) iter.Seq[N] {
+	return func(yield func(N) bool) {
+		edges := a.edges[node]
+		if edges.Len() == 0 {
+			return
+		}
+		for _, dest := range edges.dests {
+			if !yield(dest) {
+				return
+			}
+		}
+	}
+}
+
+func (a *AdjList[N, E]) Edges(node N) iter.Seq2[N, E] {
 	return func(yield func(N, E) bool) {
-		edges := a.Edges[node]
+		edges := a.edges[node]
 		if edges.Len() == 0 {
 			return
 		}
@@ -33,11 +47,11 @@ func (a *AdjList[N, E]) Neighbors(node N) iter.Seq2[N, E] {
 }
 
 func (a *AdjList[N, E]) AddEdge(src N, dest N, edge E) {
-	edges := a.Edges[src]
+	edges := a.edges[src]
 	// TODO - check if it already exists?
 	if edges == nil {
 		edges = &EdgeList[N, E]{}
-		a.Edges[src] = edges
+		a.edges[src] = edges
 	}
 	edges.Add(dest, edge)
 }

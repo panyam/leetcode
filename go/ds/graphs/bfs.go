@@ -16,19 +16,19 @@ Useful notes:
     "discovery tree" with the unique property that the root -> node path is the smallest number of
     edges.
 */
-type BFS[V comparable, E any] struct {
+type BFS[V comparable] struct {
 	Processed  map[V]bool
 	Discovered map[V]bool
 	Parents    map[V]V
-	Neighbors  func(node V) iter.Seq2[V, E]
+	Neighbors  func(node V) iter.Seq[V]
 
 	// Handlers when nodes and edges are encountered
 	EnteringVertex func(V) bool
 	LeavingVertex  func(V) bool
-	ProcessEdge    func(V, E, V) bool
+	ProcessEdge    func(start V, end V) bool
 }
 
-func (b *BFS[V, E]) Run(start V, isDirected bool) {
+func (b *BFS[V]) Run(start V, isDirected bool) {
 	if b.Processed == nil {
 		b.Processed = make(map[V]bool)
 	}
@@ -55,20 +55,20 @@ func (b *BFS[V, E]) Run(start V, isDirected bool) {
 			b.Processed[currVertex] = true
 
 			// Now go through all its children
-			for n, e := range b.Neighbors(currVertex) {
-				if !b.Processed[n] || isDirected {
+			for destVertex := range b.Neighbors(currVertex) {
+				if !b.Processed[destVertex] || isDirected {
 					if b.ProcessEdge != nil {
-						if !b.ProcessEdge(currVertex, e, n) {
+						if !b.ProcessEdge(currVertex, destVertex) {
 							// we were asked to stop
 							return
 						}
 					}
 				}
-				if !b.Discovered[n] {
+				if !b.Discovered[destVertex] {
 					// Add n to the next queue
-					nextq = append(nextq, n)
-					b.Discovered[n] = true
-					b.Parents[n] = currVertex
+					nextq = append(nextq, destVertex)
+					b.Discovered[destVertex] = true
+					b.Parents[destVertex] = currVertex
 				}
 			}
 			if b.LeavingVertex != nil {
