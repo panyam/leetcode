@@ -66,6 +66,7 @@ func (d *Dijkstra[V, E, D]) Run(start, end V) (last *WeightedEdge[V, E, D], foun
 					d.DataLess(nextEdge.Data, edgeToDest.Data)) {
 				newEdge := &Edge{Dest: nextEdge.Dest, Cost: costToNextVertex, Data: nextEdge.Data, Parent: minEdge}
 				edgeTo[nextEdge.Dest] = newEdge
+				// log.Println("Pushing: Dest: ", newEdge.Dest, "Data: ", nextEdge.Data)
 				heap.Push(&q, newEdge)
 			}
 		}
