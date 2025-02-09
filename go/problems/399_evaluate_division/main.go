@@ -42,7 +42,7 @@ func calcEquation(equations [][]string, values []float64, queries [][]string) (o
 			sofars := make(map[string]map[string]float64)
 			found := false
 			bfs := graphs.BFS[string]{Neighbors: adjmatrix.Neighbors, Directed: true}
-			bfs.EnteringVertex = func(v string) bool {
+			bfs.EnteringVertex = func(dist int, v string) bool {
 				if sofars[v] == nil {
 					sofars[v] = map[string]float64{
 						v: 1,
@@ -50,7 +50,7 @@ func calcEquation(equations [][]string, values []float64, queries [][]string) (o
 				}
 				return true
 			}
-			bfs.ProcessEdge = func(fromVar string, toVar string) bool {
+			bfs.ProcessEdge = func(dist int, fromVar string, toVar string) bool {
 				weight := adjmatrix.GetEdge(fromVar, toVar, 0)
 				sofar := sofars[startVar][fromVar] * weight
 				sofars[startVar][toVar] = sofar

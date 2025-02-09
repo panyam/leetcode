@@ -1,7 +1,7 @@
 /*
-ProblemId: 490
-ProblemTitle: The Maze
-ProblemLink: https://leetcode.com/problems/the-maze
+ProblemId: 505
+ProblemTitle: The Maze 2
+ProblemLink: https://leetcode.com/problems/the-maze-ii
 */
 package main
 
@@ -18,8 +18,11 @@ import (
 // - is it directed or undirected
 // - do we need adj list or adj matrix
 
-// Our problem is unweighted, undirected *and* best served with adj-list
-func hasPath(maze [][]int, start []int, destination []int) (found bool) {
+// Our problem is WEIGHTED - unlike maze 1.  In maze-1 it did not matter which way we went
+// here we could go two diff ways and how far we go - is the length of that edge
+// so here dijkstra is needed
+func shortestDistance(maze [][]int, start []int, destination []int) (dist int) {
+	dist = -1
 	if len(maze) == 0 || len(maze[0]) == 0 {
 		return
 	}
@@ -34,10 +37,10 @@ func hasPath(maze [][]int, start []int, destination []int) (found bool) {
 		return
 	}
 
-	neighbors := func(pos int) iter.Seq[int] {
+	neighbors := func(pos int, data any) iter.Seq[graphs.WeightedEdge[int, int, any]] {
 		r, c := i2rc(pos)
 		// log.Println("r, c: ", R, C, pos, r, c)
-		return func(yield func(int) bool) {
+		return func(yield func(graphs.WeightedEdge[int, int, any]) bool) {
 			// instead of looking at immediate neighbors, go all the way to the end
 			for _, delta := range [][]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}} {
 				dr, dc := delta[0], delta[1]
@@ -55,7 +58,17 @@ func hasPath(maze [][]int, start []int, destination []int) (found bool) {
 				if cr == r && cc == c {
 					continue
 				}
-				if !yield(rc2i(cr, cc)) {
+				distR, distC := cr-r, cc-c
+				if distR < 0 {
+					distR = -distR
+				}
+				if distC < 0 {
+					distC = -distC
+				}
+				nextPos := rc2i(cr, cc)
+				cost := max(distR, distC)
+				edge := graphs.WeightedEdge[int, int, any]{Dest: nextPos, Cost: cost, Data: any(nil)}
+				if !yield(edge) {
 					return
 				}
 			}
@@ -69,15 +82,10 @@ func hasPath(maze [][]int, start []int, destination []int) (found bool) {
 	destPos := rc2i(dr, dc)
 
 	// log.Printf("(%d,%d) -> (%d, %d)", sr, sc, dr, dc)
-	bfs := graphs.BFS[int]{Neighbors: neighbors}
-	bfs.EnteringVertex = func(dist, n int) bool {
-		if n == destPos {
-			found = true
-			// check it can indeed stop here
-			return false
-		}
-		return true
+	d := graphs.Dijkstra[int, int, any]{Neighbors: neighbors}
+	last, found := d.Run(startPos, destPos)
+	if !found {
+		return -1
 	}
-	bfs.Run(startPos)
-	return
+	return last.Cost
 }

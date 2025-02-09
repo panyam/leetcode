@@ -1,23 +1,23 @@
 package graphs
 
-import (
-	"iter"
-)
+import "iter"
 
 /*
-Performs a BFS traversal of a graph from a given node.
-Source: Skiena - Page 164
+* Performs a BFS traversal of an UNWEIGHTED graph from a given starting node.
+*
+* Source: Skiena - Page 164
+*
+* Useful notes:
+*
+* - Parents is filled during an interation but can also be passed in with partial results.
+*   It allows us to find intersting paths through a graph.   Parents[i] is the vertex that
+*   discovered vertex i.
+*
+*   Except for the root each vertex is discovered during the traversal.  This forms an interesting
+*   "discovery tree" with the unique property that the root -> node path is the smallest number of
+*   edges.
+ */
 
-Useful notes:
-
-  - Parents is filled during an interation but can also be passed in with partial results.
-    It allows us to find intersting paths through a graph.   Parents[i] is the vertex that
-    discovered vertex i.
-
-    Except for the root each vertex is discovered during the traversal.  This forms an interesting
-    "discovery tree" with the unique property that the root -> node path is the smallest number of
-    edges.
-*/
 type BFS[V comparable] struct {
 	Directed   bool
 	Processed  map[V]bool
@@ -26,9 +26,9 @@ type BFS[V comparable] struct {
 	Neighbors  func(node V) iter.Seq[V]
 
 	// Handlers when nodes and edges are encountered
-	EnteringVertex func(V) bool
-	LeavingVertex  func(V) bool
-	ProcessEdge    func(start V, end V) bool
+	EnteringVertex func(dist int, v V) bool
+	LeavingVertex  func(dist int, v V) bool
+	ProcessEdge    func(dist int, start V, end V) bool
 }
 
 func (b *BFS[V]) Run(start V) {
@@ -46,10 +46,12 @@ func (b *BFS[V]) Run(start V) {
 		delete(b.Parents, start)
 	}
 	queue := []V{start}
+	level := -1
 	for len(queue) > 0 {
+		level++
 		var nextq []V
 		for _, currVertex := range queue {
-			if b.EnteringVertex != nil && !b.EnteringVertex(currVertex) {
+			if b.EnteringVertex != nil && !b.EnteringVertex(level, currVertex) {
 				return
 			}
 
@@ -60,7 +62,7 @@ func (b *BFS[V]) Run(start V) {
 			for destVertex := range b.Neighbors(currVertex) {
 				// log.Println("Dest: ", destVertex, b.Processed[destVertex])
 				if !b.Processed[destVertex] || b.Directed {
-					if b.ProcessEdge != nil && !b.ProcessEdge(currVertex, destVertex) {
+					if b.ProcessEdge != nil && !b.ProcessEdge(level, currVertex, destVertex) {
 						// we were asked to stop
 						return
 					}
@@ -72,7 +74,7 @@ func (b *BFS[V]) Run(start V) {
 					b.Parents[destVertex] = currVertex
 				}
 			}
-			if b.LeavingVertex != nil && !b.LeavingVertex(currVertex) {
+			if b.LeavingVertex != nil && !b.LeavingVertex(level, currVertex) {
 				return
 			}
 		}
