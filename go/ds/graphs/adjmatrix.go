@@ -14,7 +14,7 @@ type AdjMatrix[N comparable, E any] struct {
 	Directed bool
 }
 
-func New[N comparable, E any]() *AdjMatrix[N, E] {
+func NewAdjMatrix[N comparable, E any]() *AdjMatrix[N, E] {
 	return &AdjMatrix[N, E]{
 		Weights: make(map[N]map[N]E),
 	}

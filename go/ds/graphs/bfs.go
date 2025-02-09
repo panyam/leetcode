@@ -17,15 +17,24 @@ Useful notes:
     edges.
 */
 type BFS[V comparable, E any] struct {
-	Processed      map[V]bool
-	Discovered     map[V]bool
-	Parents        map[V]V
+	Processed  map[V]bool
+	Discovered map[V]bool
+	Parents    map[V]V
+	Neighbors  func(node V) iter.Seq2[V, E]
+
+	// Handlers when nodes and edges are encountered
 	EnteringVertex func(V) bool
 	LeavingVertex  func(V) bool
 	ProcessEdge    func(V, E, V) bool
 }
 
-func (b *BFS[V, E]) Run(start V, isDirected bool, Neighbors func(node V) iter.Seq2[V, E]) {
+func (b *BFS[V, E]) Run(start V, isDirected bool) {
+	if b.Processed == nil {
+		b.Processed = make(map[V]bool)
+	}
+	if b.Discovered == nil {
+		b.Discovered = make(map[V]bool)
+	}
 	if b.Parents == nil {
 		b.Parents = make(map[V]V)
 	}
@@ -46,7 +55,7 @@ func (b *BFS[V, E]) Run(start V, isDirected bool, Neighbors func(node V) iter.Se
 			b.Processed[currVertex] = true
 
 			// Now go through all its children
-			for n, e := range Neighbors(currVertex) {
+			for n, e := range b.Neighbors(currVertex) {
 				if !b.Processed[n] || isDirected {
 					if b.ProcessEdge != nil {
 						if !b.ProcessEdge(currVertex, e, n) {
@@ -63,7 +72,7 @@ func (b *BFS[V, E]) Run(start V, isDirected bool, Neighbors func(node V) iter.Se
 				}
 			}
 			if b.LeavingVertex != nil {
-				b.EnteringVertex(currVertex)
+				b.LeavingVertex(currVertex)
 			}
 		}
 		queue = nextq

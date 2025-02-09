@@ -1,5 +1,7 @@
 package ds
 
+import "iter"
+
 // A basic twod array - ideally for cache in DP problems
 
 type Grid[T any] struct {
@@ -39,27 +41,35 @@ func (t *Grid[T]) SafeSet(r, c int, val T) {
 }
 
 // Go through all the 8 neighbors of a location in a grid.
-func IterAllNeighbors(R, C, r, c int, handler func(r, c int)) {
-	for dr := -1; dr <= 1; dr += 1 {
-		for dc := -1; dc <= 1; dc += 1 {
-			nr, nc := r+dr, c+dc
-			if nr >= 0 && nr < R && nc >= 0 && nc < C {
-				if nr != r || nc != c {
-					handler(nr, nc)
+func IterAllNeighbors(R, C, r, c int) iter.Seq2[int, int] {
+	return func(yield func(int, int) bool) {
+		for dr := -1; dr <= 1; dr += 1 {
+			for dc := -1; dc <= 1; dc += 1 {
+				nr, nc := r+dr, c+dc
+				if nr >= 0 && nr < R && nc >= 0 && nc < C {
+					if nr != r || nc != c {
+						if !yield(nr, nc) {
+							return
+						}
+					}
 				}
 			}
 		}
 	}
 }
 
-func IterSideNeighbors(R, C, r, c int, handler func(r, c int)) {
-	for dr := -1; dr <= 1; dr += 1 {
-		for dc := -1; dc <= 1; dc += 1 {
-			nr, nc := r+dr, c+dc
-			if nr >= 0 && nr < R && nc >= 0 && nc < C {
-				if nr*nc == 0 { // Rules out (dr,dc) in (-1, -1), (1, -1), (-1, 1), (1, 1)
-					if nr != r || nc != c { // This rules out dr,dc = (0,0)
-						handler(nr, nc)
+func IterSideNeighbors(R, C, r, c int) iter.Seq2[int, int] {
+	return func(yield func(int, int) bool) {
+		for dr := -1; dr <= 1; dr += 1 {
+			for dc := -1; dc <= 1; dc += 1 {
+				nr, nc := r+dr, c+dc
+				if nr >= 0 && nr < R && nc >= 0 && nc < C {
+					if nr*nc == 0 { // Rules out (dr,dc) in (-1, -1), (1, -1), (-1, 1), (1, 1)
+						if nr != r || nc != c { // This rules out dr,dc = (0,0)
+							if !yield(nr, nc) {
+								return
+							}
+						}
 					}
 				}
 			}
