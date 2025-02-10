@@ -70,17 +70,17 @@ class DFS:
         self.exit_times[currnode] = self.T
         self.processed[currnode] = True
 
-
-    def is_parent_edge(self, x, y):
-        """ Returns true if x is the parent of y """
-        return self.parents[y] == x
-
     def is_back_edge(self, x, y):
         """
         Tells if the edge x -> y is such that y is "higher" in the graph
         than x but we are cycling back.
         """
         return self.discovered[y] and not self.processed[y]
+
+
+    def is_parent_edge(self, x, y):
+        """ Returns true if x is the parent of y """
+        return self.parents[y] == x
 
     def is_forward_edge(self, x, y):
         return self.processed[y] and self.entry_times[y] > self.entry_times[x]
