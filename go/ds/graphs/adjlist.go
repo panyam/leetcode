@@ -63,10 +63,9 @@ type EdgeList[N comparable, E any] struct {
 }
 
 func (e *EdgeList[N, E]) Add(dest N, data E) *EdgeList[N, E] {
-	if !e.Contains(dest) {
-		e.dests = append(e.dests, dest)
-		e.datas = append(e.datas, data)
-	}
+	// Do not check for duplicates - leave it to the caller to avoid parallel edges
+	e.dests = append(e.dests, dest)
+	e.datas = append(e.datas, data)
 	return e
 }
 

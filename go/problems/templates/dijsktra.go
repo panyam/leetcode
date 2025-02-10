@@ -71,7 +71,7 @@ func minTimeToReach(moveTime [][]int) (out int) {
 
 ////////////// EndSolution //////////////////
 
-// //////////// BeginTemplate: go/ds/pq.go //////////////
+// ///////////// BeginTemplate: go/ds/pq.go //////////////
 type PQ[V any] struct {
 	items    []V
 	LessFunc func(a, b V) bool
