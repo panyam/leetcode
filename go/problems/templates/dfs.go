@@ -1,6 +1,17 @@
-package graphs
+package main
 
 import "iter"
+
+// Use this template for problems you want to submit that need dijsktra
+// Idea is to have all imports "inlined" so copy/paste is easier
+// Goal is we should not have any links to internal imports here
+
+////////////// BeginSolution //////////////////
+////////////// Example: Problem 3342 //////////////////
+
+////////////// EndSolution //////////////////
+
+// /////////// BeginTemplate: go/ds/graphs/dfs.go //////////////
 
 // A very simple DFS suitable for unweighted graphs
 func SimpleDFS[V comparable](curr V, visited map[V]bool, neighbors func(node V) iter.Seq[V]) iter.Seq[V] {
@@ -28,7 +39,6 @@ func SimpleDFS[V comparable](curr V, visited map[V]bool, neighbors func(node V) 
 	}
 }
 
-// A more thorough DFS for graphs with custom edges etc based on Skiena
 type DFS[V comparable, E any] struct {
 	Directed   bool
 	Processed  map[V]bool
@@ -178,3 +188,5 @@ func (t *TopoSort[V, E]) Run(nodes []V) iter.Seq[TopoSortEvent[V, E]] {
 		}
 	}
 }
+
+///////////// End Template: go/ds/graphs/dijsktra.go //////////////
