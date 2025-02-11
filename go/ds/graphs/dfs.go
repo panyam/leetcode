@@ -37,23 +37,14 @@ type DFS[V comparable, E any] struct {
 	EntryTimes map[V]int
 	ExitTimes  map[V]int
 	T          int
-	YieldEdges bool
 
 	// Method to return the edges
 	Edges func(node V) iter.Seq2[V, E]
-}
 
-const (
-	DFSEntered = 0
-	DFSEdge    = 1
-	DFSExited  = 2
-)
-
-type DFSEvent[V comparable, E any] struct {
-	Event int
-	Curr  V
-	Next  V
-	Edge  E
+	// Handler methods
+	EnteringVertex func(v V) bool
+	LeavingVertex  func(v V) bool
+	ProcessEdge    func(start, end V, edge E) bool
 }
 
 func (d *DFS[V, E]) Init() *DFS[V, E] {
@@ -67,54 +58,50 @@ func (d *DFS[V, E]) Init() *DFS[V, E] {
 }
 
 // A iterator version of the DFS
-func (d *DFS[V, E]) Run(curr V) iter.Seq[DFSEvent[V, E]] {
-	return func(yield func(DFSEvent[V, E]) bool) {
-		d.Discovered[curr] = true
-		d.T++
+func (d *DFS[V, E]) Run(curr V) (finished bool) {
+	d.Discovered[curr] = true
+	d.T++
 
-		if !yield(DFSEvent[V, E]{Event: DFSEntered, Curr: curr}) {
-			return
-		}
-
-		for child, edge := range d.Edges(curr) {
-			if !d.Discovered[child] {
-				d.Parents[child] = curr
-
-				// Process the edge if need be
-				if d.YieldEdges && !yield(DFSEvent[V, E]{Event: DFSEdge, Curr: curr, Next: child, Edge: edge}) {
-					return
-				}
-
-				// recurse into the children
-				d.Run(child)
-			} else if d.Directed || !d.Processed[child] {
-				if d.YieldEdges && !yield(DFSEvent[V, E]{Event: DFSEdge, Curr: curr, Next: child, Edge: edge}) {
-					return
-				}
-			}
-		}
-
-		if !yield(DFSEvent[V, E]{Event: DFSExited, Curr: curr}) {
-			return
-		}
-
+	defer func() {
 		d.T++
 		d.ExitTimes[curr] = d.T
 		d.Processed[curr] = true
+	}()
+
+	if d.EnteringVertex != nil && !d.EnteringVertex(curr) {
+		return false
 	}
+
+	for child, edge := range d.Edges(curr) {
+		if !d.Discovered[child] {
+			d.Parents[child] = curr
+
+			// Process the edge if need be
+			if d.ProcessEdge != nil && !d.ProcessEdge(curr, child, edge) {
+				return false
+			}
+
+			// recurse into the children
+			d.Run(child)
+		} else if d.Directed || !d.Processed[child] {
+			if d.ProcessEdge != nil && !d.ProcessEdge(curr, child, edge) {
+				return false
+			}
+		}
+	}
+
+	if d.LeavingVertex != nil && !d.LeavingVertex(curr) {
+		return false
+	}
+	return true
 }
 
-/*
-		Tells if the edge x -> y is such that y is "higher" in the graph
-	  than x but we are cycling back.
-*/
+func (d *DFS[V, E]) IsTreeEdge(x, y V) bool {
+	return d.Parents[y] == x
+}
+
 func (d *DFS[V, E]) IsBackEdge(x, y V) bool {
 	return d.Discovered[y] && !d.Processed[y]
-}
-
-// Returns true if x is the parent of y
-func (d *DFS[V, E]) IsParentEdge(x, y V) bool {
-	return d.Parents[y] == x
 }
 
 func (d *DFS[V, E]) IsForwardEdge(x, y V) bool {
@@ -126,55 +113,46 @@ func (d *DFS[V, E]) IsCrossEdge(x, y V) bool {
 }
 
 // TopoLogical sorting that uses DFS above
-const (
-	TopoSortStarted     = 0
-	TopoSortAddedVertex = 1
-	TopoSortFoundCycle  = 2
-)
-
-type TopoSortEvent[V comparable, E any] struct {
-	Event int
-	Curr  V
-	Next  V
-	Edge  E
-}
-
 type TopoSort[V comparable, E any] struct {
 	Edges  func(node V) iter.Seq2[V, E]
 	Output []V
+
+	Started     func(vertex V) bool
+	AddedVertex func(vertex V) bool
+	FoundCycle  func(curr, next V, edge E) bool
 }
 
-func (t *TopoSort[V, E]) Run(nodes []V) iter.Seq[TopoSortEvent[V, E]] {
-	return func(yield func(TopoSortEvent[V, E]) bool) {
-		dfs := DFS[V, E]{Edges: t.Edges, Directed: true}
-		for _, n := range nodes {
-			if dfs.Discovered[n] {
-				continue
-			}
-
-			// Signals start of a new DFS run from a root
-			// Indicating a new component
-			if !yield(TopoSortEvent[V, E]{Event: TopoSortStarted, Curr: n}) {
-				return
-			}
-
-			for evt := range dfs.Run(n) {
-				if evt.Event == DFSExited {
-					t.Output = append(t.Output, evt.Curr)
-					if !yield(TopoSortEvent[V, E]{Event: TopoSortAddedVertex, Curr: evt.Curr, Next: evt.Next, Edge: evt.Edge}) {
-						return
-					}
-				} else if evt.Event == DFSEdge {
-					curr, next := evt.Curr, evt.Next
-					if dfs.IsBackEdge(curr, next) {
-						// we have a cycle
-						if !yield(TopoSortEvent[V, E]{Event: TopoSortFoundCycle, Curr: curr, Next: next, Edge: evt.Edge}) {
-							return
-						}
-						break
-					}
-				}
+func (t *TopoSort[V, E]) Run(nodes []V) (finished bool) {
+	dfs := DFS[V, E]{Edges: t.Edges, Directed: true}
+	dfs.LeavingVertex = func(v V) bool {
+		t.Output = append(t.Output, v)
+		if t.AddedVertex != nil && !t.AddedVertex(v) {
+			return false
+		}
+		return true
+	}
+	dfs.ProcessEdge = func(curr, next V, edge E) bool {
+		if dfs.IsBackEdge(curr, next) {
+			// we have a cycle
+			if t.FoundCycle != nil && !t.FoundCycle(curr, next, edge) {
+				return false
 			}
 		}
+		return true
 	}
+
+	for _, n := range nodes {
+		if dfs.Discovered[n] {
+			continue
+		}
+
+		// Signals start of a new DFS run from a root
+		// Indicating a new component
+		if t.Started != nil && !t.Started(n) {
+			return false
+		}
+
+		dfs.Run(n)
+	}
+	return true
 }

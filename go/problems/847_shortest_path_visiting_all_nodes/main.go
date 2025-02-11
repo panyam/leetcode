@@ -49,7 +49,7 @@ func shortestPathLength(graph [][]int) (out int) {
 		startNode := createNode(i, 1<<i)
 		// log.Println("N: ", N, strconv.FormatInt(int64(RIGHTBITS), 2))
 		// log.Println("Staring at: ", strconv.FormatInt(int64(startNode), 2))
-		bfs := graphs.BFSIter[int]{Neighbors: neighbors}
+		bfs := graphs.BFSIter[int]{Neighbors: neighbors}.Init()
 		bfs.Run(startNode, func(event int, level int, curr, next int) int {
 			if event == -1 {
 				_, usedUp := splitNode(curr)
