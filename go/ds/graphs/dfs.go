@@ -2,32 +2,6 @@ package graphs
 
 import "iter"
 
-// A very simple DFS suitable for unweighted graphs
-func SimpleDFS[V comparable](curr V, visited map[V]bool, neighbors func(node V) iter.Seq[V]) iter.Seq[V] {
-	if visited == nil {
-		visited = map[V]bool{}
-	}
-	return func(yield func(V) bool) {
-		if visited[curr] {
-			return
-		}
-		visited[curr] = true
-		defer func() {
-			visited[curr] = false
-		}()
-		if !yield(curr) {
-			return
-		}
-		for next := range neighbors(curr) {
-			for yielded := range SimpleDFS(next, visited, neighbors) {
-				if !yield(yielded) {
-					return
-				}
-			}
-		}
-	}
-}
-
 // A more thorough DFS for graphs with custom edges etc based on Skiena
 type DFS[V comparable, E any] struct {
 	Directed   bool
@@ -123,7 +97,7 @@ type TopoSort[V comparable, E any] struct {
 }
 
 func (t *TopoSort[V, E]) Run(nodes []V) (finished bool) {
-	dfs := DFS[V, E]{Edges: t.Edges, Directed: true}
+	dfs := (&DFS[V, E]{Edges: t.Edges, Directed: true}).Init()
 	dfs.LeavingVertex = func(v V) bool {
 		t.Output = append(t.Output, v)
 		if t.AddedVertex != nil && !t.AddedVertex(v) {
@@ -142,17 +116,42 @@ func (t *TopoSort[V, E]) Run(nodes []V) (finished bool) {
 	}
 
 	for _, n := range nodes {
-		if dfs.Discovered[n] {
-			continue
-		}
+		if !dfs.Discovered[n] {
 
-		// Signals start of a new DFS run from a root
-		// Indicating a new component
-		if t.Started != nil && !t.Started(n) {
-			return false
-		}
+			// Signals start of a new DFS run from a root
+			// Indicating a new component
+			if t.Started != nil && !t.Started(n) {
+				return false
+			}
 
-		dfs.Run(n)
+			dfs.Run(n)
+		}
 	}
 	return true
+}
+
+// A very simple DFS suitable for unweighted graphs
+func SimpleDFS[V comparable](curr V, visited map[V]bool, neighbors func(node V) iter.Seq[V]) iter.Seq[V] {
+	if visited == nil {
+		visited = map[V]bool{}
+	}
+	return func(yield func(V) bool) {
+		if visited[curr] {
+			return
+		}
+		visited[curr] = true
+		defer func() {
+			visited[curr] = false
+		}()
+		if !yield(curr) {
+			return
+		}
+		for next := range neighbors(curr) {
+			for yielded := range SimpleDFS(next, visited, neighbors) {
+				if !yield(yielded) {
+					return
+				}
+			}
+		}
+	}
 }

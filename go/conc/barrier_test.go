@@ -28,11 +28,11 @@ func (c *counter) Get() (res int) {
 	c.Unlock()
 	return
 }
-func worker(wid int, c *counter, before *Barrier, after *Barrier, wg *sync.WaitGroup) {
+func worker(c *counter, before *Barrier, wg *sync.WaitGroup) {
 	for i := 0; i < 3; i++ {
-		before.Wait(wid)
+		before.Before()
 		c.Incr()
-		before.Wait(wid)
+		before.After()
 		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 		fmt.Println(c.Get())
 	}
@@ -43,11 +43,10 @@ func ExampleBarrier() {
 	var wg sync.WaitGroup
 	workers := 5
 	before := NewBarrier(uint(workers))
-	after := NewBarrier(uint(workers))
 	c := counter{}
 	wg.Add(workers)
 	for i := 0; i < workers; i++ {
-		go worker(i, &c, before, after, &wg)
+		go worker(&c, before, &wg)
 	}
 	wg.Wait()
 	// Output:
