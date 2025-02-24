@@ -36,22 +36,6 @@ type ParallelArrayProcessor struct {
 	NumWorkers int
 }
 
-func (p *ParallelArrayProcessor) SerialRun() (outputs []any, collVals []PAPDebug) {
-	numInputs := len(p.Inputs)
-	for i := range len(p.Inputs) {
-		outputs = append(outputs, p.Inputs[i])
-	}
-
-	for stage, mapper := range p.Mappers {
-		for i := range numInputs {
-			wid := int(i / p.NumWorkers)
-			outputs[i] = mapper(outputs[i])
-			collVals = append(collVals, PAPDebug{stage, i, wid})
-		}
-	}
-	return
-}
-
 func (p *ParallelArrayProcessor) Run() (outputs []any, collVals []PAPDebug) {
 	perworker := int(len(p.Inputs) / p.NumWorkers)
 	if p.NumWorkers*perworker < len(p.Inputs) {
@@ -110,11 +94,21 @@ func (p *ParallelArrayProcessor) Run() (outputs []any, collVals []PAPDebug) {
 	return
 }
 
+// Som tests
+func TestBasic(t *testing.T) {
+	runTest(t, 3, 10, func(i any) any { return i.(int) * 2 }, func(i any) any { return i.(int) + 2 })
+	runTest(t, 3, 20, func(i any) any { return i.(int) * 2 }, func(i any) any { return i.(int) + 2 }, func(i any) any { return i.(int) + 5 }, func(i any) any { return i.(int) * 5 })
+	runTest(t, 5, 98, func(i any) any { return i.(int) * 2 }, func(i any) any { return i.(int) + 2 }, func(i any) any { return i.(int) + 5 }, func(i any) any { return i.(int) * 5 })
+}
+
 func runTest(t *testing.T, numWorkers int, maxInputs int, mappers ...(func(any) any)) {
 	var inputs []any
 	for i := range maxInputs {
 		inputs = append(inputs, i+1)
 	}
+	log.Println("=============== NumWorkers, NumInputs, NumMappers: ", numWorkers, maxInputs, len(mappers))
+
+	// Run the job serially as well so we have a source of truth
 
 	p := &ParallelArrayProcessor{NumWorkers: numWorkers, Inputs: inputs, Mappers: mappers}
 	expected, expdebug := p.SerialRun()
@@ -142,6 +136,19 @@ func runTest(t *testing.T, numWorkers int, maxInputs int, mappers ...(func(any) 
 	}
 }
 
-func TestBasic(t *testing.T) {
-	runTest(t, 3, 10, func(i any) any { return i.(int) * 2 }, func(i any) any { return i.(int) + 2 })
+func (p *ParallelArrayProcessor) SerialRun() (outputs []any, collVals []PAPDebug) {
+	numInputs := len(p.Inputs)
+	for i := range len(p.Inputs) {
+		outputs = append(outputs, p.Inputs[i])
+	}
+
+	perworker := int(numInputs / p.NumWorkers)
+	for stage, mapper := range p.Mappers {
+		for i := range numInputs {
+			wid := int(i / perworker)
+			outputs[i] = mapper(outputs[i])
+			collVals = append(collVals, PAPDebug{stage, i, wid})
+		}
+	}
+	return
 }
