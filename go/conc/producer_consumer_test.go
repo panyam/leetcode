@@ -5,8 +5,10 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/rand"
 )
 
@@ -19,21 +21,23 @@ func producer(id int, nvals int, wg *sync.WaitGroup, outch chan uint64, counter 
 	wg.Done()
 }
 
-func consumer(id int, nvals int, wg *sync.WaitGroup, inch chan uint64) {
-	var vals []string
-	for range nvals {
-		val := <-inch
-		vals = append(vals, fmt.Sprintf("Consumer: %03d, Value: %03d", id, val))
-		time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
-	}
-	sort.Strings(vals)
-	for _, s := range vals {
-		fmt.Println(s)
-	}
-	wg.Done()
+func consumer(id int, nvals int, wg *sync.WaitGroup, inch chan uint64) chan []string {
+	outchan := make(chan []string, 1)
+	go func() {
+		var vals []string
+		for range nvals {
+			val := <-inch
+			vals = append(vals, fmt.Sprintf("Consumer: %03d, Value: %03d", id, val))
+			time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
+		}
+		sort.Strings(vals)
+		outchan <- vals
+		wg.Done()
+	}()
+	return outchan
 }
 
-func ExampleOneProducerOneConsumer() {
+func TestOneProducerOneConsumer(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	var counter atomic.Uint64
@@ -41,17 +45,22 @@ func ExampleOneProducerOneConsumer() {
 	nvals := 5
 
 	go producer(1, nvals, &wg, ch, &counter)
-	go consumer(1, nvals, &wg, ch)
+	outch := consumer(1, nvals, &wg, ch)
 	wg.Wait()
+
+	found := <-outch
 	// Output:
-	// Consumer: 001, Value: 001
-	// Consumer: 001, Value: 002
-	// Consumer: 001, Value: 003
-	// Consumer: 001, Value: 004
-	// Consumer: 001, Value: 005
+	expected := []string{
+		"Consumer: 001, Value: 001",
+		"Consumer: 001, Value: 002",
+		"Consumer: 001, Value: 003",
+		"Consumer: 001, Value: 004",
+		"Consumer: 001, Value: 005",
+	}
+	assert.Equal(t, expected, found)
 }
 
-func ExampleManyProducerOneConsumer() {
+func TextManyProducerOneConsumer(t *testing.T) {
 	var wg sync.WaitGroup
 	var counter atomic.Uint64
 	ch := make(chan uint64)
@@ -59,50 +68,54 @@ func ExampleManyProducerOneConsumer() {
 	nprods := 5
 
 	wg.Add(1)
-	go consumer(1, nvals*nprods, &wg, ch)
+	outch := consumer(1, nvals*nprods, &wg, ch)
 	for i := range nprods {
 		wg.Add(1)
 		go producer(i, nvals, &wg, ch, &counter)
 	}
 	wg.Wait()
-	// Output:
-	// Consumer: 001, Value: 001
-	// Consumer: 001, Value: 002
-	// Consumer: 001, Value: 003
-	// Consumer: 001, Value: 004
-	// Consumer: 001, Value: 005
-	// Consumer: 001, Value: 006
-	// Consumer: 001, Value: 007
-	// Consumer: 001, Value: 008
-	// Consumer: 001, Value: 009
-	// Consumer: 001, Value: 010
-	// Consumer: 001, Value: 011
-	// Consumer: 001, Value: 012
-	// Consumer: 001, Value: 013
-	// Consumer: 001, Value: 014
-	// Consumer: 001, Value: 015
-	// Consumer: 001, Value: 016
-	// Consumer: 001, Value: 017
-	// Consumer: 001, Value: 018
-	// Consumer: 001, Value: 019
-	// Consumer: 001, Value: 020
-	// Consumer: 001, Value: 021
-	// Consumer: 001, Value: 022
-	// Consumer: 001, Value: 023
-	// Consumer: 001, Value: 024
-	// Consumer: 001, Value: 025
+	found := <-outch
+	expected := []string{
+		"Consumer: 001, Value: 001",
+		"Consumer: 001, Value: 002",
+		"Consumer: 001, Value: 003",
+		"Consumer: 001, Value: 004",
+		"Consumer: 001, Value: 005",
+		"Consumer: 001, Value: 006",
+		"Consumer: 001, Value: 007",
+		"Consumer: 001, Value: 008",
+		"Consumer: 001, Value: 009",
+		"Consumer: 001, Value: 010",
+		"Consumer: 001, Value: 011",
+		"Consumer: 001, Value: 012",
+		"Consumer: 001, Value: 013",
+		"Consumer: 001, Value: 014",
+		"Consumer: 001, Value: 015",
+		"Consumer: 001, Value: 016",
+		"Consumer: 001, Value: 017",
+		"Consumer: 001, Value: 018",
+		"Consumer: 001, Value: 019",
+		"Consumer: 001, Value: 020",
+		"Consumer: 001, Value: 021",
+		"Consumer: 001, Value: 022",
+		"Consumer: 001, Value: 023",
+		"Consumer: 001, Value: 024",
+		"Consumer: 001, Value: 025",
+	}
+	assert.Equal(t, expected, found)
 }
 
-func ExampleOneProducerManyConsumer() {
+func TestExampleOneProducerManyConsumer(t *testing.T) {
 	var wg sync.WaitGroup
 	var counter atomic.Uint64
 	ch := make(chan uint64)
 	nvals := 5
 	ncons := 5
 
+	var outchs []chan []string
 	for i := range ncons {
 		wg.Add(1)
-		go consumer(i, nvals, &wg, ch)
+		outchs = append(outchs, consumer(i, nvals, &wg, ch))
 	}
 	wg.Add(1)
 	go producer(1, nvals*ncons, &wg, ch, &counter)
@@ -162,16 +175,17 @@ func consumerfrombuffer(id int, nvals int, wg *sync.WaitGroup, inch chan uint64)
 // We could have changed the channel to be an N elem bounded channel.
 // Now we will look at an infinite buffer.  Producers keep dumping into a queue
 // and consumers will just read of this queue.
-func ExampleInfiniteBuffer() {
+func _TestInfiniteBuffer(t *testing.T) {
 	var wg sync.WaitGroup
 	var counter atomic.Uint64
 	ch := make(chan uint64)
 	nvals := 5
 	ncons := 5
 
+	var outchs []chan []string
 	for i := range ncons {
 		wg.Add(1)
-		go consumer(i, nvals, &wg, ch)
+		outchs = append(outchs, consumer(i, nvals, &wg, ch))
 	}
 	wg.Add(1)
 	go producer(1, nvals*ncons, &wg, ch, &counter)

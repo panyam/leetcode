@@ -42,7 +42,7 @@ func worker(c *counter, before *Barrier, wg *sync.WaitGroup) {
 func ExampleBarrier() {
 	var wg sync.WaitGroup
 	workers := 5
-	before := NewBarrier(uint(workers))
+	before := NewBarrier(int(workers))
 	c := counter{}
 	wg.Add(workers)
 	for i := 0; i < workers; i++ {

@@ -7,6 +7,16 @@ import (
 	"github.com/panyam/leetcode/go/ds"
 )
 
+// type EdgeCostExp interface {
+// constraints.Integer | constraints.Float
+// }
+
+type EdgeCost interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64
+}
+
 type WeightedEdge[V comparable, E EdgeCost, D any] struct {
 	Dest   V
 	Cost   E

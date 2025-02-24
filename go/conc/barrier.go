@@ -7,13 +7,13 @@ import (
 type Barrier struct {
 	m        sync.Mutex
 	nWritten int
-	c        uint
-	n        uint
+	c        int
+	n        int
 	before   chan bool
 	after    chan bool
 }
 
-func NewBarrier(n uint) *Barrier {
+func NewBarrier(n int) *Barrier {
 	if n <= 1 {
 		panic("n must be > 1")
 	}
@@ -29,7 +29,7 @@ func (b *Barrier) Before() {
 	b.c += 1
 	if b.c == b.n {
 		// open 2nd gate
-		for i := uint(0); i < b.n; i++ {
+		for i := 0; i < b.n; i++ {
 			b.before <- true
 		}
 	}
@@ -41,7 +41,7 @@ func (b *Barrier) After() {
 	b.c -= 1
 	if b.c == 0 {
 		// open 1st gate
-		for i := uint(0); i < b.n; i++ {
+		for i := 0; i < b.n; i++ {
 			b.after <- true
 		}
 	}
